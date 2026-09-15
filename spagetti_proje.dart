@@ -146,55 +146,108 @@ class NetgsmSmsServisi {
     print("SMS iletildi: " + gsm);
   }
 }
-//SRP İHLALİ Bu sınıf ödeme kargo mail vb. birden fazla sorumluluk stlenmiş.
-class SiparisYoneticisi implements ISiparisKaydedici, IKargoServisi, IMailServisi, ISmsServisi, IFaturaServisi  {
-    // DIP İHLAİ veritabanı, mail ve SMS servislerinin somut sınıflarını doğrudan oluşturuyor.
+
+
+class SiparisKaydediciServis implements ISiparisKaydedici {
   SqliteVeritabani db = SqliteVeritabani();
-  SmtpMailServisi mailci = SmtpMailServisi();
-  NetgsmSmsServisi smsci = NetgsmSmsServisi();
 
   @override
   void siparisKaydet(String orderId, double tutar) {
     db.kaydet("INSERT INTO siparisler VALUES ('$orderId', $tutar)");
   }
+}
 
-// OCP İHLALİ yeni bir ödeme tipi eklendiğinde odemeYap() metodu değiştirilimek zzorunda kalıyor. 
-//   @override
-//   void odemeYap(String tip, double tutar) {
-//     if (tip == "KREDI_KARTI") {
-//       print("$tutar TL Kredi kartindan POS ile cekildi.");
-//     } else if (tip == "HAVALE") {
-//       print("$tutar TL Havale kontrol edildi.");
-//     } else if (tip == "KAPIDA_ODEME") {
-//       print("$tutar TL Kapida odeme tahsil edilecek (Komisyon +15 TL).");
-//     } else if (tip == "CRYPTO") {
-//       print("$tutar TL USDT transferi onaylandi.");
-//     } else {
-//       print("Gecersiz odeme yontemi");
-//     }
-//   }
-
-    
-
+class KargoServis implements IKargoServisi {
   @override
   void kargoGonder(String orderId, String adres) {
     print("MNG Kargo takip fis basildi: $adres");
   }
+}
+
+class MailServis implements IMailServisi {
+  SmtpMailServisi mailci = SmtpMailServisi();
 
   @override
   void mailGonder(String email, String mesaj) {
     mailci.mailAt(email, mesaj);
   }
+}
+
+class SmsServis implements ISmsServisi {
+  NetgsmSmsServisi smsci = NetgsmSmsServisi();
 
   @override
   void smsGonder(String tel, String mesaj) {
     smsci.smsYolla(tel, mesaj);
   }
+}
 
+class FaturaServis implements IFaturaServisi {
   @override
   void faturaYazdir(String orderId) {
     print("Fatura PDF cikarildi: $orderId");
   }
+}
+
+//SRP İHLALİ Bu sınıf ödeme kargo mail vb. birden fazla sorumluluk stlenmiş.
+class SiparisYoneticisi  {
+    // DIP İHLAİ veritabanı, mail ve SMS servislerinin somut sınıflarını doğrudan oluşturuyor.
+    final ISiparisKaydedici kaydedici;
+    final IKargoServisi kargoServis;
+    final IMailServisi mailServis;
+    final ISmsServisi smsServis;
+    final IFaturaServisi faturaServis;
+
+    SiparisYoneticisi(
+        this.kaydedici,
+        this.kargoServis,
+        this.mailServis,
+        this.smsServis,
+        this.faturaServis,
+    );
+
+//   @override
+//   void siparisKaydet(String orderId, double tutar) {
+//     db.kaydet("INSERT INTO siparisler VALUES ('$orderId', $tutar)");
+//   }
+
+// // OCP İHLALİ yeni bir ödeme tipi eklendiğinde odemeYap() metodu değiştirilimek zzorunda kalıyor. 
+// //   @override
+// //   void odemeYap(String tip, double tutar) {
+// //     if (tip == "KREDI_KARTI") {
+// //       print("$tutar TL Kredi kartindan POS ile cekildi.");
+// //     } else if (tip == "HAVALE") {
+// //       print("$tutar TL Havale kontrol edildi.");
+// //     } else if (tip == "KAPIDA_ODEME") {
+// //       print("$tutar TL Kapida odeme tahsil edilecek (Komisyon +15 TL).");
+// //     } else if (tip == "CRYPTO") {
+// //       print("$tutar TL USDT transferi onaylandi.");
+// //     } else {
+// //       print("Gecersiz odeme yontemi");
+// //     }
+// //   }
+
+    
+
+//   @override
+//   void kargoGonder(String orderId, String adres) {
+//     print("MNG Kargo takip fis basildi: $adres");
+//   }
+
+//   @override
+//   void mailGonder(String email, String mesaj) {
+//     mailci.mailAt(email, mesaj);
+//   }
+
+//   @override
+//   void smsGonder(String tel, String mesaj) {
+//     smsci.smsYolla(tel, mesaj);
+//   }
+
+//   @override
+//   void faturaYazdir(String orderId) {
+//     print("Fatura PDF cikarildi: $orderId");
+//   }
 
   void siparisTamamla(
       String orderId,
@@ -240,16 +293,22 @@ class SiparisYoneticisi implements ISiparisKaydedici, IKargoServisi, IMailServis
     
 
     odemeStratejisi.odemeYap(sonTutar);
-    siparisKaydet(orderId, sonTutar);
-    faturaYazdir(orderId);
-    mailGonder(email, "Sayin $musteriAdi, siparisiniz alindi. Tutar: $sonTutar TL");
-    smsGonder(tel, "Siparisiniz onaylandi: $orderId");
-    kargoGonder(orderId, adres);
+    kaydedici.siparisKaydet(orderId, sonTutar);
+    faturaServis.faturaYazdir(orderId);
+    mailServis.mailGonder(email, "Sayin $musteriAdi, siparisiniz alindi. Tutar: $sonTutar TL");
+    smsServis.smsGonder(tel, "Siparisiniz onaylandi: $orderId");
+    kargoServis.kargoGonder(orderId, adres);
   }
 }
 
 void main() {
-  var siparisci = SiparisYoneticisi();
+    var siparisci = SiparisYoneticisi(
+        SiparisKaydediciServis(),
+        KargoServis(),
+        MailServis(),
+        SmsServis(),
+        FaturaServis(),
+    );
 
   var urun1 = FizikselUrun("1", "Kablosuz Mouse", 450.0, 5);
   var urun2 = DijitalUrun("2", "Flutter Kursu E-Kitap", 150.0, 100);
