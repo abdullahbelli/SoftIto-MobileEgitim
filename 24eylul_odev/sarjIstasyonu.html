@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Şarj İstasyonu Süre & Fiyat</title>
+</head>
+
+<body>
+
+    <script>
+        const sarjHesapla = (
+            mevcutYuzde, // Bataryanın mevcut şarj yüzdesi
+            hedefYuzde, // Ulaşılmak istenen şarj yüzdesi
+            bataryaKWh, // Bataryanın toplam kapasitesi
+            maxSarjGucuKW, // Aracın kabul edebildiği maksimum şarj gücü
+            istasyonKW, // Şarj istasyonunun verebildiği maksimum güç
+            gunduzFiyat,// Gündüz tarifesinde 1 kWh fiyatı
+            geceFiyat// Gece tarifesinde 1 kWh fiyatı
+        ) => {
+
+            if (mevcutYuzde >= hedefYuzde) {
+                console.log("Hedef yüzde mevcut yüzden büyük olmalı.");
+                return;
+            }
+
+            // Gerekli enerji
+            const gerekenEnerji = ((hedefYuzde - mevcutYuzde) / 100) * bataryaKWh;
+
+            // Araç ve istasyondan düşük olan güç kullanılır
+            const kullanilabilirGuc = Math.min(maxSarjGucuKW, istasyonKW);
+
+            // Toplam şarj süresi (dakika)
+            const sureDakika = (gerekenEnerji / kullanilabilirGuc) * 60;
+
+            // Bilgisayarın mevcut zamanı
+            const baslangic = new Date();
+
+            // Şarjın biteceği zamanı hesapla
+            const bitis = new Date(baslangic.getTime() + sureDakika * 60 * 1000);
+
+            let gunduzDakika = 0;
+            let geceDakika = 0;
+
+            // Dakika dakika kontrol ediyoruz
+            let kontrolZamani = new Date(baslangic);
+
+            while (kontrolZamani < bitis) {
+                const saat = kontrolZamani.getHours();
+
+                // 22:00 - 06:00 gece tarifesi
+                if (saat >= 22 || saat < 6) {
+                    geceDakika++;
+                } else {
+                    gunduzDakika++;
+                }
+
+                // 1 dakika ileri git
+                kontrolZamani.setMinutes(kontrolZamani.getMinutes() + 1);
+            }
+
+            // Dakika başına harcanan enerji
+            const dakikaBasinaEnerji = gerekenEnerji / sureDakika;
+
+            // Tarifelerde kullanılan enerji
+            const gunduzEnerji = gunduzDakika * dakikaBasinaEnerji;
+            const geceEnerji = geceDakika * dakikaBasinaEnerji;
+
+            // Fiyat hesapları
+            const gunduzUcret = gunduzEnerji * gunduzFiyat;
+            const geceUcret = geceEnerji * geceFiyat;
+            const toplamUcret = gunduzUcret + geceUcret;
+
+            console.log(`Başlangıç: ${baslangic.toLocaleTimeString()}`);
+            console.log(`Bitiş: ${bitis.toLocaleTimeString()}`);
+            console.log(`Gerekli enerji: ${gerekenEnerji.toFixed(2)} kWh`);
+            console.log(`Kullanılabilir güç: ${kullanilabilirGuc} kW`);
+            console.log(`Tahmini süre: ${sureDakika.toFixed(2)} dakika`);
+            console.log(`Gündüz süresi: ${gunduzDakika} dakika`);
+            console.log(`Gece süresi: ${geceDakika} dakika`);
+            console.log(`Gündüz tüketimi: ${gunduzEnerji.toFixed(2)} kWh`);
+            console.log(`Gece tüketimi: ${geceEnerji.toFixed(2)} kWh`);
+            console.log(`Gündüz ücreti: ${gunduzUcret.toFixed(2)} TL`);
+            console.log(`Gece ücreti: ${geceUcret.toFixed(2)} TL`);
+            console.log(`Toplam ücret: ${toplamUcret.toFixed(2)} TL`);
+        };
+
+        sarjHesapla(
+            20,
+            80,
+            60,
+            100,
+            150,
+            10,
+            6
+        );
+    </script>
+
+</body>
+
+</html>
+```
