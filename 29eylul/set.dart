@@ -1,0 +1,38 @@
+//Set ve Ağ güvenlik kümeleri
+
+void main() {
+  print("Beyaz Liste ve Küme Aanalizi");
+
+  final Set<String> istanbulVeriMerkeziIpleri = {
+    "10.0.1.10",
+    "10.0.1.11",
+    "10.0.1.12",
+    "10.0.1.13",
+    "10.0.1.10", // Çift kayıt Set burayı anında tek hale getirir
+  };
+
+  print("İstanbul IPleri: $istanbulVeriMerkeziIpleri");
+
+  final Set<String> frankfurtVeriMerkeziIpleri = {
+    "10.0.1.13",
+    "10.0.1.30",
+    "10.0.1.45",
+  };
+
+  print("Frankfurt IP leri: $frankfurtVeriMerkeziIpleri");
+
+  final ortakKopruIpler = istanbulVeriMerkeziIpleri.intersection(
+    frankfurtVeriMerkeziIpleri,
+  );
+  print("Ortak Ağ IPleri(kesişim): $ortakKopruIpler");
+
+  final tumGlobalIpler = istanbulVeriMerkeziIpleri.union(
+    frankfurtVeriMerkeziIpleri,
+  );
+  print("ToplamGlobal IP ler: $tumGlobalIpler");
+
+  final sadeceIstanbul = istanbulVeriMerkeziIpleri.difference(
+    frankfurtVeriMerkeziIpleri,
+  );
+  print("Sadece İstanbul: $sadeceIstanbul");
+}
