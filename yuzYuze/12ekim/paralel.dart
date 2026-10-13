@@ -35,7 +35,6 @@ void main(){
   //aynı anda çoğul dinleme 
   final broadcastStream = controller.stream.asBroadcastStream();
   broadcastStream.listen((d) => print("UI Ekranı :$d"));
-  broadcastStream.listen((d) => print("aNALİTİK SERVİS EKRANI :$d"));
 
 
 
