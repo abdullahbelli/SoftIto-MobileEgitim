@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS, Flutter ve React Native Soruları</title>
+</head>
+
+<body>
+
+    <h1>CSS, Flutter ve React Native Soruları</h1>
+
+    <h3>1. Flexbox ile CSS Grid arasındaki mimari fark nedir ve ne zaman hangisi seçilmelidir?</h3>
+    <p>
+        Flexbox tek boyutludur. Genellikle elemanları yatay veya dikey olarak hizalamk için kullanılır. content first
+        tür. Navbar içi,buton içi metin, mesaj balonu, tek boyutlu akışlar
+        <br> Css grid iki boyutludur. Layout firsttür. Hem satırları hem de sütunları aynı anda yönetir. Foto galeri,
+        dashboard , tek sayfa iskeleti gibi durumlarda kullanılır.
+    </p>
+
+    <h3>2. CSS Grid'deki fr (fractional unit) birimi, geleneksel yüzde (%) birimine göre neden daha güvenlidir?</h3>
+    <p>
+        fr kullanılabilr boş alanı otomatik paylaştırır. % kkullanımı padding gibi değerler ile genişliği taşabilir. fr
+        kalan alanı hesaba kattığı için daha güvenilirdir.
+    </p>
+
+    <h3>3. Neden "Desktop-First" (max-width) yerine "Mobile-First" (min-width) mimarisi tercih edilir?</h3>
+    <p>
+        Günümüzde mobil kullanım daha fazla. Önce küçük ekranlar için temel tasarım sonra ekran büyüdükçe yeni özellik
+        eklneir. Responsive yönetimi daha kolay olur.
+    </p>
+
+    <h3>4. CSS3'te transition ve animation yazarken neden top, left, width yerine transform ve opacity tercih
+        edilmelidir?</h3>
+    <p>
+        top, left, width gibi özellikler değiştiğinde tarayıcı sayfa düzenini tekrar hesaplayabilir. transform ve
+        opacity ise daha performanslı çalıştığı için animasyonlar daha akıcı olur.
+    </p>
+
+    <h3>5. CSS Grid'de auto-fit ile minmax() birleşimi nasıl çalışır ve responsive tasarım açısından ne avantaj sağlar?
+    </h3>
+    <p>
+        minmax() ile sütunların minimum ve maksimum genişliği belirlenir, auto-fit ise ekrana sığacak sütunları otomatik
+        olarak yerleştirip alanı paylaştırır. media query yazmadan resonsive tasarım yapılabilir.
+    </p>
+
+    <h3>6. grid-template-areas özelliğinin sağladığı en büyük kurumsal avantaj nedir?</h3>
+    <p>
+        Sayfa yerleşiminin daha okunabilir ve anlaşılır şekilde tanımlanmasını sağlar.
+    </p>
+
+    <h3>7. CSS'te clamp() fonksiyonunun 3 parametresi ne anlama gelir?</h3>
+    <p>
+        font-size: clamp(1.8rem, 4vw, 2.8rem); dersteki örneğe bakarsak font ekrana göre değişir ama 1.8rem’den küçük,
+        2.8rem’den büyük olmaz. 4vw, ekran genişledikçe yazının da büyümesini sağlayan değişken değerdir.
+    </p>
+
+    <h3>8. Bir CSS animasyonunun sonsuza kadar kesintisiz çalışması için hangi CSS kuralı kullanılır?</h3>
+    <p>
+        infinite kullanılır.
+    </p>
+
+    <h3>9. Flutter'da CSS Grid'in ve Flexbox'ın doğrudan karşılığı olan widget'lar nelerdir?</h3>
+    <p>
+        CSS Grid'in Flutter'daki karşılığı genellikle GridView veya GridView.builder widget'larıdır.
+        <br>Flexbox'ın karşılığı ise kullanım yönüne göre Row ve Column widget'larıdır. Ayrıca Flexible ve Expanded
+        widget'ları da elemanların boş alanı paylaşmasını sağlar.
+    </p>
+
+    <h3>10. React Native'de CSS Grid kullanılabilir mi? Kullanılamıyorsa çok sütunlu ızgara yapısı nasıl
+        oluşturulabilir?</h3>
+    <p>
+        React Native'in ana yerleşim sistemi Flexbox'tır. Standart olarak CSS Grid desteklenmez.
+        Çok sütunlu yapı oluşturmak için FlatList bileşeninin numColumns özelliği kullanılabilir.
+    </p>
+
+</body>
+
+</html>

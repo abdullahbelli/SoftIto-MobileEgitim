@@ -1,0 +1,19 @@
+
+# Flutter generated files
+**/.dart_tool/
+**/build/
+**/Flutter/ephemeral/
+**/.idea/
+**/*.iml
+**/android/local.properties
+**/GeneratedPluginRegistrant.java
+**/GeneratedPluginRegistrant.h
+**/GeneratedPluginRegistrant.m
+**/Flutter/Generated.xcconfig
+**/Flutter/flutter_export_environment.sh
+
+# Sensitive files
+**/.env
+**/.env.*
+**/chrome-device/
+.DS_Store
