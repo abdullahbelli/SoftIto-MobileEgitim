@@ -1,7 +1,10 @@
 /// Rotiva eğitim projesine ait demo metinleri (KVKK, Açık Rıza, Sözleşme).
 /// Bu metinler eğitim amaçlı simülasyondur ve hukuki bağlayıcılığı yoktur.
 class DemoTexts {
+  // Kayıt ekranında açılan KVKK Aydınlatma Metni başlığı
   static const String kvkkTitle = 'KVKK Aydınlatma Metni (Eğitim Demosu)';
+
+  // KVKK Aydınlatma Metni'nin tam içeriği (Çok satırlı string - multiline)
   static const String kvkkContent = '''
 ROTİVA ARAÇ KİRALAMA VE TAKİP UYGULAMASI
 KİŞİSEL VERİLERİN KORUNMASI KANUNU (KVKK) AYDINLATMA METNİ
@@ -26,7 +29,10 @@ Verileriniz hiçbir şekilde üçüncü kişilere, reklam ortaklarına veya kamu
 KVKK'nın 11. maddesi kapsamındaki haklarınız demo ortamında simüle edilmekte olup, dilediğiniz zaman profil ekranından bilgilerinizi silebilir veya uygulamayı cihazınızdan kaldırarak tüm yerel veriyi temizleyebilirsiniz.
 ''';
 
+  // Kayıt ekranındaki Açık Rıza onay diyaloğu başlığı
   static const String acikRizaTitle = 'Açık Rıza Metni (Eğitim Demosu)';
+
+  // Açık Rıza beyan metni içeriği
   static const String acikRizaContent = '''
 ROTİVA AÇIK RIZA BEYANI
 (EĞİTİM DEMOSU - GERÇEK HUKUKİ BELGE DEĞİLDİR)
@@ -40,8 +46,11 @@ Rotiva Araç Kiralama uygulaması bünyesinde sunulan demo hizmetlerin yürütü
 Özgür irademle kabul ediyor ve açık rıza veriyorum.
 ''';
 
+  // Kiralama formunda onaylanan sözleşme diyaloğu başlığı
   static const String rentalAgreementTitle =
       'Araç Kiralama Sözleşmesi (Eğitim Demosu)';
+
+  // Kiralama sözleşmesinin maddeleri (İş kurallarını özetler)
   static const String rentalAgreementContent = '''
 ROTİVA KİRALAMA SÖZLEŞMESİ ŞARTLARI
 (EĞİTİM DEMOSU - GERÇEK HUKUKİ BELGE DEĞİLDİR)

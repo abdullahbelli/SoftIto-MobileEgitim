@@ -1,5 +1,7 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, formatlayıcılar, boş durum görünümü, AppBar, Scope ve Araç Kartını içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/empty_state_view.dart';
@@ -10,8 +12,9 @@ import '../models/vehicle.dart';
 import 'vehicle_detail_screen.dart';
 
 /// Araçlar Sekmesi.
-/// Marka/model arama, kategori, yakıt, vites ve fiyat aralığı filtreleriyle tüm araçları listeler.
+/// Marka/model arama, kategori, yakıt, vites, şehir ve fiyat aralığı filtreleriyle tüm araçları listeler.
 class VehiclesTabView extends StatefulWidget {
+  // Statik const constructor tanımlıyoruz.
   const VehiclesTabView({super.key});
 
   @override
@@ -19,20 +22,24 @@ class VehiclesTabView extends StatefulWidget {
 }
 
 class _VehiclesTabViewState extends State<VehiclesTabView> {
+  // Arama metni denetleyicisi
   final _searchController = TextEditingController();
-  String _searchQuery = '';
-  VehicleCategory? _selectedCategory;
-  FuelType? _selectedFuel;
-  TransmissionType? _selectedTransmission;
-  String? _selectedCity;
-  double _maxDailyPrice = 4000.0;
+  String _searchQuery = ''; // Arama sorgu metni
+  VehicleCategory? _selectedCategory; // Kategori filtresi
+  FuelType? _selectedFuel; // Yakıt filtresi
+  TransmissionType? _selectedTransmission; // Vites filtresi
+  String? _selectedCity; // Şehir filtresi
+  double _maxDailyPrice =
+      4000.0; // Maksimum günlük fiyat filtresi (Slider ile ayarlanır)
 
   @override
   void dispose() {
+    // Bellek sızıntılarını önlemek için controller'ı dispose ediyoruz.
     _searchController.dispose();
     super.dispose();
   }
 
+  /// Tüm arama ve filtre seçimlerini varsayılan hallerine sıfırlayan metot
   void _resetFilters() {
     setState(() {
       _searchController.clear();
@@ -50,8 +57,9 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
     final theme = Theme.of(context);
     final repository = RotivaScope.of(context).repository;
 
+    // Aktif araçları filtre kriterlerine göre süzüyoruz.
     final vehicles = repository.activeVehicles.where((v) {
-      // 1. Metin araması
+      // 1. Marka, model veya şehir metin araması
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
         final matches =
@@ -60,15 +68,15 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
             v.city.toLowerCase().contains(query);
         if (!matches) return false;
       }
-      // 2. Kategori filtresi
+      // 2. Kasa kategorisi filtresi (Sedan, SUV vb.)
       if (_selectedCategory != null && v.category != _selectedCategory) {
         return false;
       }
-      // 3. Yakıt filtresi
+      // 3. Yakıt türü filtresi (Benzin, Dizel, Elektrik vb.)
       if (_selectedFuel != null && v.fuelType != _selectedFuel) {
         return false;
       }
-      // 4. Vites filtresi
+      // 4. Vites türü filtresi (Otomatik, Manuel)
       if (_selectedTransmission != null &&
           v.transmission != _selectedTransmission) {
         return false;
@@ -77,7 +85,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
       if (_selectedCity != null && v.city != _selectedCity) {
         return false;
       }
-      // 6. Maksimum fiyat filtresi
+      // 6. Maksimum günlük kiralama ücreti filtresi
       if (v.dailyRate > _maxDailyPrice) {
         return false;
       }
@@ -89,6 +97,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
       appBar: RotivaAppBar(
         titleText: 'Tüm Araçlar',
         actions: [
+          // Filtreleri tek dokunuşla sıfırlama butonu
           IconButton(
             tooltip: 'Filtreleri Sıfırla',
             icon: const Icon(Icons.filter_alt_off_outlined),
@@ -98,7 +107,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
       ),
       body: Column(
         children: [
-          // Arama Çubuğu
+          // Arama Çubuğu (Marka / Model arama)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: TextField(
@@ -126,7 +135,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
             ),
           ),
 
-          // Yatay Kategori Çipleri
+          // Yatay Kategori Çipleri (Kasa Tipi: Tüm Tipler, Sedan, SUV vb.)
           SizedBox(
             height: 48,
             child: ListView(
@@ -159,14 +168,14 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
             ),
           ),
 
-          // İkinci Filtre Satırı (Vites, Yakıt, Şehir ve Fiyat)
+          // İkinci Filtre Satırı (Vites, Yakıt, Şehir ve Fiyat Çipi)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  // Vites Seçimi
+                  // Vites Seçimi Açılır Butonu
                   DropdownButton<TransmissionType?>(
                     value: _selectedTransmission,
                     hint: const Text('Vites', style: TextStyle(fontSize: 13)),
@@ -188,7 +197,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
                   ),
                   const SizedBox(width: 12),
 
-                  // Yakıt Seçimi
+                  // Yakıt Seçimi Açılır Butonu
                   DropdownButton<FuelType?>(
                     value: _selectedFuel,
                     hint: const Text('Yakıt', style: TextStyle(fontSize: 13)),
@@ -209,7 +218,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
                   ),
                   const SizedBox(width: 12),
 
-                  // Şehir Seçimi
+                  // Şehir Seçimi Açılır Butonu
                   DropdownButton<String?>(
                     value: _selectedCity,
                     hint: const Text('Şehir', style: TextStyle(fontSize: 13)),
@@ -227,7 +236,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
                   ),
                   const SizedBox(width: 12),
 
-                  // Fiyat Filtresi Butonu / Özeti
+                  // Maksimum Fiyat Filtresi Buton Çipi
                   ActionChip(
                     avatar: const Icon(Icons.tune, size: 16),
                     label: Text(
@@ -242,7 +251,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
 
           const Divider(height: 12),
 
-          // Sonuç Bilgi Satırı
+          // Bulunan Araç Sayısı ve Temizleme Satırı
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
@@ -275,7 +284,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
             ),
           ),
 
-          // Araç Listesi
+          // Filtrelenmiş Araçlar Listesi
           Expanded(
             child: vehicles.isEmpty
                 ? EmptyStateView(
@@ -290,6 +299,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
                     itemCount: vehicles.length,
                     itemBuilder: (context, index) {
                       final vehicle = vehicles[index];
+                      // Aracın ortalama yıldız puanını ve yorum sayısını alıyoruz.
                       final rating = repository.getAverageRatingForVehicle(
                         vehicle.id,
                       );
@@ -312,6 +322,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
     );
   }
 
+  /// Fiyat filtresi alt sayfasını (BottomSheet) açan metot
   void _showPriceFilterBottomSheet(BuildContext context) {
     double tempPrice = _maxDailyPrice;
     showModalBottomSheet(
@@ -343,6 +354,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
                       ),
                     ),
                   ),
+                  // Fiyat seçimi için Slider bileşeni
                   Slider(
                     value: tempPrice,
                     min: 800.0,
@@ -370,6 +382,7 @@ class _VehiclesTabViewState extends State<VehiclesTabView> {
     );
   }
 
+  /// Araç detay sayfasına geçiş yapan metot
   void _openVehicleDetail(Vehicle vehicle) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => VehicleDetailScreen(vehicle: vehicle)),

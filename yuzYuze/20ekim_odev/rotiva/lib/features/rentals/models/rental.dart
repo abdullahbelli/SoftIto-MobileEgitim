@@ -1,31 +1,39 @@
+// Kiralama durumu, ödeme durumu, teslimat ve ödeme yöntemi enum'larını içeren sabitler dosyasını içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 
-/// Rotiva araç kiralama rezervasyon modeli.
+/// Rotiva araç kiralama rezervasyon veri modeli.
+/// Rezervasyon kodu, müşteri, araç, tarih aralığı, kilometre ve nihai tutar bilgilerini saklar.
 class Rental {
-  final String id;
-  final String reservationCode;
-  final String customerId;
-  final String customerName;
-  final String vehicleId;
-  final String vehicleName;
-  final DateTime startDate;
-  final DateTime endDate;
-  final int rentalDays;
-  final int dailyKmLimitChosen;
-  final bool hasExtraKm;
-  final double additionalKmCost;
-  final DeliveryType deliveryType;
-  final String? deliveryAddress;
-  final PaymentMethod paymentMethod;
-  final double basePrice;
-  final double deliveryFee;
-  final double discount;
-  final double finalPrice;
-  final PaymentStatus paymentStatus;
-  final RentalStatus rentalStatus;
-  final DateTime agreementAcceptedAt;
-  final DateTime createdAt;
+  final String id; // Kiralama kaydının benzersiz ID'si
+  final String reservationCode; // Kullanıcıya gösterilen 6 haneli benzersiz rezervasyon takip kodu (Örn: RTV-8942)
+  final String customerId; // Kiralamayı yapan müşterinin ID'si
+  final String customerName; // Müşterinin ad ve soyadı
+  final String vehicleId; // Kiralanan aracın ID'si
+  final String vehicleName; // Kiralanan aracın marka ve model bilgisi
+  final DateTime startDate; // Kiralama başlangıç tarihi
+  final DateTime endDate; // Kiralama bitiş / teslim tarihi
+  final int rentalDays; // Toplam kiralama gün sayısı (Takvim günü farkı)
+  final int dailyKmLimitChosen; // Seçilen günlük kilometre sınırı (Standart veya ek paketli)
+  final bool hasExtraKm; // Ek kilometre paketinin satın alınıp alınmadığı
+  final double additionalKmCost; // Ek kilometre paketinin toplam maliyeti
+  final DeliveryType deliveryType; // Teslimat tercihi (Şubeden veya Adrese)
+  final String?
+  deliveryAddress; // Adrese teslimat seçildiyse belirtilen açık adres
+  final PaymentMethod paymentMethod; // Tercih edilen ödeme yöntemi (Kredi Kartı, Havale, Şubede Nakit)
+  final double
+  basePrice; // Günlük ücret × gün sayısı ile hesaplanan taban kiralama bedeli
+  final double
+  deliveryFee; // Adrese teslimat seçildiyse yansıtılan teslimat bedeli
+  final double discount; // Şubeden teslim + şubede nakit seçiminde uygulanan %10 indirim tutarı
+  final double finalPrice; // Müşterinin ödeyeceği nihai toplam tutar (base + extraKm + delivery - discount)
+  final PaymentStatus
+  paymentStatus; // Ödeme durumu (Simüle Ödendi, Şubede Ödenecek vb.)
+  final RentalStatus
+  rentalStatus; // Kiralama durumu (Onaylandı, Aktif, Tamamlandı, İptal Edildi)
+  final DateTime agreementAcceptedAt; // Kiralama sözleşmesinin müşteri tarafından onaylandığı zaman damgası
+  final DateTime createdAt; // Rezervasyonun sisteme girildiği tarih
 
+  // Değiştirilemez (immutable) const constructor
   const Rental({
     required this.id,
     required this.reservationCode,
@@ -52,11 +60,16 @@ class Rental {
     required this.createdAt,
   });
 
+  // Kiralamanın tamamlanıp tamamlanmadığını kontrol eden getter (Yorum bırakma butonu için kullanılır)
   bool get isCompleted => rentalStatus == RentalStatus.completed;
+  // Kiralamanın şu an aktif kullanımda olup olmadığını kontrol eden getter
   bool get isActive => rentalStatus == RentalStatus.active;
+  // Kiralamanın onaylanmış durumda olup olmadığını kontrol eden getter
   bool get isApproved => rentalStatus == RentalStatus.approved;
+  // Kiralamanın iptal edilip edilmediğini kontrol eden getter
   bool get isCancelled => rentalStatus == RentalStatus.cancelled;
 
+  /// Kiralama kaydını kopyalayarak alan güncellemesi sağlayan copyWith metodu
   Rental copyWith({
     String? id,
     String? reservationCode,
@@ -109,6 +122,7 @@ class Rental {
     );
   }
 
+  /// SharedPreferences kalıcılığı için Map yapısına dönüştüren metot
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -137,6 +151,7 @@ class Rental {
     };
   }
 
+  /// JSON verisinden Rental nesnesi oluşturan fabrika kurucusu
   factory Rental.fromJson(Map<String, dynamic> json) {
     return Rental(
       id: json['id'] as String,

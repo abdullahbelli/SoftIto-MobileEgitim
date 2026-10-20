@@ -1,5 +1,7 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, demo metinler, tarih araçları, formatlayıcılar, diyaloglar ve rozetleri içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/demo_texts.dart';
 import '../../../core/utils/date_utils.dart';
@@ -15,9 +17,11 @@ import '../../vehicles/models/vehicle.dart';
 import '../models/rental_pricing.dart';
 
 /// Kiralama formu, sürücü uygunluk denetimi ve sözleşme kabul ekranı.
+/// Tarih seçimi, teslimat tipi, ek km paketi, doğum tarihi ve ehliyet süresi denetimlerini yürütür.
 class RentalFormScreen extends StatefulWidget {
-  final Vehicle vehicle;
-  final DateTimeRange? initialDateRange;
+  final Vehicle vehicle; // Kiralanmak istenen araç nesnesi
+  final DateTimeRange?
+  initialDateRange; // Önceden seçilmiş başlangıç ve bitiş tarihleri
 
   const RentalFormScreen({
     super.key,
@@ -30,13 +34,18 @@ class RentalFormScreen extends StatefulWidget {
 }
 
 class _RentalFormScreenState extends State<RentalFormScreen> {
+  // Adrese teslimat seçildiğinde açık adres metin denetleyicisi
   final _addressController = TextEditingController();
+  // Seçili kiralama tarih aralığı
   late DateTimeRange _dateRange;
+  // Teslimat tipi (Şubeden teslim veya Adrese teslim)
   DeliveryType _deliveryType = DeliveryType.branch;
+  // Ekstra kilometre paketi istendi mi?
   bool _hasExtraKm = false;
+  // Kiralama sözleşmesi kabul edildi mi?
   bool _agreementAccepted = false;
 
-  // Sürücü profil tamamlama (Gerekirse)
+  // Kullanıcının profilinde kayıtlı doğum tarihi ve ehliyet tarihi (Eksikse bu ekranda seçtirilir)
   DateTime? _userBirthDate;
   DateTime? _userLicenseDate;
 
@@ -44,6 +53,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
   void initState() {
     super.initState();
     final now = DateTime.now();
+    // Başlangıç tarihi belirtilmemişse bugünden itibaren 2 günlük varsayılan aralık atıyoruz.
     _dateRange =
         widget.initialDateRange ??
         DateTimeRange(
@@ -55,6 +65,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Giriş yapmış kullanıcının kayıtlı sürücü bilgilerini alıyoruz.
     final user = RotivaScope.of(context).repository.currentUser;
     _userBirthDate ??= user?.driverBirthDate;
     _userLicenseDate ??= user?.licenseIssueDate;
@@ -62,10 +73,12 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
 
   @override
   void dispose() {
+    // Bellek sızıntılarını önlemek için controller'ı dispose ediyoruz.
     _addressController.dispose();
     super.dispose();
   }
 
+  /// Kiralama tarih aralığı seçici diyaloğunu açar.
   Future<void> _pickDateRange() async {
     final now = DateTime.now();
     final firstDate = RotivaDateUtils.dateOnly(now);
@@ -83,6 +96,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
 
     if (picked != null) {
       DateTime end = picked.end;
+      // Aynı gün seçilmişse en az 1 tam gün olacak şekilde düzeltiyoruz.
       if (end.difference(picked.start).inDays < 1) {
         end = picked.start.add(const Duration(days: 1));
       }
@@ -92,6 +106,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
     }
   }
 
+  /// Sürücünün doğum tarihini seçtiren tarih seçici
   Future<void> _pickBirthDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -105,6 +120,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
     }
   }
 
+  /// Sürücünün ehliyet alış tarihini seçtiren tarih seçici
   Future<void> _pickLicenseDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -118,6 +134,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
     }
   }
 
+  /// Kiralama sözleşmesi metnini açılır kaydırılabilir diyalogda gösteren metot
   void _showRentalAgreementDialog() {
     RotivaDialogs.showScrollableContentDialog(
       context: context,
@@ -126,6 +143,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
     );
   }
 
+  /// Sürücü şartlarını, çakışmayı ve sözleşmeyi denetleyip ödeme ekranına geçiren fonksiyon
   void _proceedToPayment() {
     final repository = RotivaScope.of(context).repository;
 
@@ -139,7 +157,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
       return;
     }
 
-    // 2. Yaş ve Ehliyet Şartı Uygunluk Kontrolü (Tam Yıl)
+    // 2. Yaş ve Ehliyet Şartı Uygunluk Kontrolü (Tam Yıl Hesabı)
     final age = RotivaDateUtils.calculateExactAge(_userBirthDate!);
     final licenseYears = RotivaDateUtils.calculateExactLicenseYears(
       _userLicenseDate!,
@@ -163,7 +181,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
       return;
     }
 
-    // 3. Adrese Teslim Adres Zorunluluğu
+    // 3. Adrese Teslimatta Açık Adres Zorunluluğu
     if (_deliveryType == DeliveryType.address &&
         _addressController.text.trim().isEmpty) {
       RotivaDialogs.showSnackBar(
@@ -174,7 +192,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
       return;
     }
 
-    // 4. Tarih Çakışması Kontrolü
+    // 4. Tarih Çakışması Kontrolü (Başka müşteri kiralamış mı?)
     final isAvailable = repository.isVehicleAvailable(
       widget.vehicle.id,
       _dateRange.start,
@@ -250,6 +268,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
       _dateRange.end,
     );
 
+    // Güncel tercihlere göre fiyatlandırmayı hesaplıyoruz.
     final pricing = RentalPricing.calculate(
       vehicle: widget.vehicle,
       startDate: _dateRange.start,
@@ -318,6 +337,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
+                    // Kasa ve Yakıt Rozetleri
                     Row(
                       children: [
                         VehicleTypeBadge(
@@ -337,7 +357,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
             ),
             const SizedBox(height: 16),
 
-            // 1. Tarih Seçimi
+            // 1. Kiralama Tarihleri Bölümü
             const SectionHeader(
               title: '1. Kiralama Tarihleri',
               padding: EdgeInsets.zero,
@@ -391,7 +411,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
             ),
             const SizedBox(height: 20),
 
-            // 2. Teslimat Tipi
+            // 2. Teslimat Tercihi Bölümü (Şubeden veya Adrese)
             const SectionHeader(
               title: '2. Teslimat Tercihi',
               padding: EdgeInsets.zero,
@@ -430,6 +450,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
             ),
             if (_deliveryType == DeliveryType.address) ...[
               const SizedBox(height: 12),
+              // Adres Giriş Metin Kutusu
               TextFormField(
                 controller: _addressController,
                 maxLines: 2,
@@ -446,7 +467,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
             ],
             const SizedBox(height: 20),
 
-            // 3. Kilometre Paketi
+            // 3. Kilometre Paketi Tercihi
             const SectionHeader(
               title: '3. Kilometre Paketi',
               padding: EdgeInsets.zero,
@@ -476,7 +497,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
             ),
             const SizedBox(height: 16),
 
-            // 4. Sürücü Bilgileri ve Yaş/Ehliyet Kontrolü
+            // 4. Sürücü Doğrulama Bilgileri ve Yaş/Ehliyet Kontrolü
             SectionHeader(
               title: '4. Sürücü Doğrulama Bilgileri',
               subtitle:
@@ -513,7 +534,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
             ),
             const SizedBox(height: 20),
 
-            // 5. Fiyat Özeti Kartı
+            // 5. Fiyat Hesaplama Özeti Kartı
             Card(
               elevation: 1,
               child: Padding(
@@ -638,6 +659,7 @@ class _RentalFormScreenState extends State<RentalFormScreen> {
     );
   }
 
+  /// Fiyat dökümü satırını oluşturan yardımcı metot (Taşmaları önlemek için Expanded içerir)
   Widget _buildPriceRow(String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

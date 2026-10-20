@@ -1,20 +1,21 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Material Design arayüz bileşenleri.
 
-import '../../features/vehicles/models/vehicle.dart';
-import '../constants/app_constants.dart';
-import '../utils/formatters.dart';
-import 'fuel_type_badge.dart';
-import 'vehicle_type_badge.dart';
+import '../../features/vehicles/models/vehicle.dart'; // Araç veri modeli.
+import '../constants/app_constants.dart'; // Araç kategorisi enum tanımları.
+import '../utils/formatters.dart'; // Para birimi formatlama fonksiyonu.
+import 'fuel_type_badge.dart'; // Renkli yakıt türü rozeti bileşeni.
+import 'vehicle_type_badge.dart'; // Renkli araç tipi rozeti bileşeni.
 
 /// Rotiva araç kartı bileşeni.
 /// Müşteri listelerinde ve ana sayfada araç bilgilerini, fiyatını ve özelliklerini gösterir.
 class VehicleCard extends StatelessWidget {
-  final Vehicle vehicle;
-  final double? rating;
-  final int reviewCount;
-  final VoidCallback onTap;
-  final VoidCallback? onRentTap;
-  final Widget? trailingAction;
+  final Vehicle vehicle; // Kartta sergilenecek araç verisi
+  final double? rating; // Aracın ortalama müşteri puanı (1.0 - 5.0)
+  final int reviewCount; // Araca yapılan toplam yorum sayısı
+  final VoidCallback onTap; // Karta dokunulduğunda çalışacak fonksiyon (Detay sayfasına yönlendirir)
+  final VoidCallback?
+  onRentTap; // "Kirala" butonuna doğrudan basıldığında çalışacak fonksiyon
+  final Widget? trailingAction; // Yönetici panelinde düzenle/sil gibi özel butonlar eklemek için opsiyonel alan
 
   const VehicleCard({
     super.key,
@@ -28,22 +29,26 @@ class VehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final theme = Theme.of(context); // Aktif tema bilgisi
+    final isDark = theme.brightness == Brightness.dark; // Koyu tema kontrolü
 
     return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      clipBehavior: Clip.antiAlias, // Köşeleri yuvarlatılmış kartın içindeki görselin taşmasını engeller
+      margin: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 8,
+      ), // Kartın ekran kenarlarından dış boşluğu
       child: InkWell(
-        onTap: onTap,
+        onTap: onTap, // Tıklanabilir dalgalanma efekti (ripple)
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Üst Görsel / Rozet Alanı
+            // ==================== ÜST GÖRSEL VE ROZET ALANI ====================
             Container(
               height: 140,
               width: double.infinity,
               decoration: BoxDecoration(
+                // Temaya uygun şık açık mavi veya antrasit gradyan zemin
                 gradient: LinearGradient(
                   colors: isDark
                       ? [const Color(0xFF2C3440), const Color(0xFF1F242C)]
@@ -54,7 +59,7 @@ class VehicleCard extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  // Ortadaki Araç Temsili İkonu
+                  // Ortadaki Araç Temsili İkonu ve Marka/Model Yazısı
                   Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -78,7 +83,7 @@ class VehicleCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Sol Üst: Renkli Araç Tipi Rozeti (Madde 5)
+                  // Sol Üst: Renkli Araç Tipi Rozeti (Sedan, SUV vb.)
                   Positioned(
                     top: 12,
                     left: 12,
@@ -88,13 +93,14 @@ class VehicleCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Sağ Üst: Yıl veya Pasif Rozeti
+                  // Sağ Üst: Model Yılı veya Pasif Uyarısı
                   Positioned(
                     top: 12,
                     right: 12,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Araç pasife alınmışsa kırmızı etiket gösterilir
                         if (!vehicle.isActive)
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -115,6 +121,7 @@ class VehicleCard extends StatelessWidget {
                               ),
                             ),
                           ),
+                        // Üretim yılı rozeti
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -137,7 +144,7 @@ class VehicleCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Sol Alt: Lokasyon
+                  // Sol Alt: Lokasyon (İl / İlçe)
                   Positioned(
                     bottom: 10,
                     left: 12,
@@ -175,7 +182,7 @@ class VehicleCard extends StatelessWidget {
               ),
             ),
 
-            // Araç Bilgileri ve Fiyat Alanı
+            // ==================== ARAÇ BİLGİLERİ VE FİYAT ALANI ====================
             Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
@@ -184,6 +191,7 @@ class VehicleCard extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Araç Adı ve Değerlendirme Puanı
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,7 +251,7 @@ class VehicleCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      // Fiyat Kutusu
+                      // Günlük Fiyat Kutusu
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
@@ -269,9 +277,12 @@ class VehicleCard extends StatelessWidget {
                   const Divider(height: 1),
                   const SizedBox(height: 10),
 
-                  // Özellik İkonları (Yakıt, Vites, Yaş ve Ehliyet Şartı)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // Özellik Rozetleri (Yakıt, Vites, Yaş ve Ehliyet Şartı)
+                  // Wrap bileşeni sayesinde dar ekranlarda taşma (overflow) yaşanmadan alt satıra geçer
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    alignment: WrapAlignment.spaceBetween,
                     children: [
                       FuelTypeBadge(
                         fuelType: vehicle.fuelType,
@@ -295,6 +306,7 @@ class VehicleCard extends StatelessWidget {
                     ],
                   ),
 
+                  // Alt Aksiyon Butonu (Kirala veya Yönetici Aksiyonu)
                   if (trailingAction != null) ...[
                     const SizedBox(height: 12),
                     trailingAction!,
@@ -319,6 +331,7 @@ class VehicleCard extends StatelessWidget {
     );
   }
 
+  /// Minik özellik hapı (İkon + Metin)
   Widget _buildSpecPill({
     required IconData icon,
     required String label,
@@ -342,6 +355,7 @@ class VehicleCard extends StatelessWidget {
     );
   }
 
+  /// Kategoriye uygun simgeyi döndüren yardımcı metot
   IconData _getCategoryIcon(VehicleCategory category) {
     switch (category) {
       case VehicleCategory.sedan:

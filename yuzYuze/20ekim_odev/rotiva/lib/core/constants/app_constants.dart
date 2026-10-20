@@ -1,13 +1,15 @@
-/// Rotiva uygulaması sabitleri ve yardımcı tanımları.
+/// Rotiva uygulaması genelinde kullanılan sabit değerler ve yardımcı enum tanımları.
 class AppConstants {
-  static const String appName = 'Rotiva';
-  static const String appTagline = 'Araç Kiralama ve Takip';
-  static const String appVersion = '1.0.0 (Demo)';
+  static const String appName = 'Rotiva'; // Uygulamanın adı.
+  static const String appTagline =
+      'Araç Kiralama ve Takip'; // Uygulamanın sloganı.
+  static const String appVersion =
+      '1.0.0 (Demo)'; // Uygulamanın versiyon bilgisi.
 
-  // Para birimi
+  // Para birimi simgesi (Türk Lirası)
   static const String currencySymbol = '₺';
 
-  // Şehirler ve ilçeler (Arama ve filtreleme için)
+  // Şehirler ve ilçeler sözlüğü (Arama ve filtreleme açılır menülerinde kullanılır)
   static const Map<String, List<String>> turkeyCities = {
     'İstanbul': [
       'Kadıköy',
@@ -24,15 +26,16 @@ class AppConstants {
     'Bursa': ['Nilüfer', 'Osmangazi', 'Yıldırım', 'Mudanya'],
   };
 
-  // İndirim oranı
-  static const double cashDiscountRate = 0.10; // %10 şube nakit indirimi
+  // Şubeden teslim + nakit ödemede uygulanan indirim oranı
+  static const double cashDiscountRate = 0.10; // %10 şube nakit indirimi kuralı
 }
 
-/// Kullanıcı rolleri
+/// Uygulamadaki kullanıcı rolleri (Yetkilendirme ve ekran ayrımı için kullanılır)
 enum UserRole {
-  customer,
-  admin;
+  customer, // Müşteri rolü
+  admin; // Yönetici rolü
 
+  /// Ekranda kullanıcıya gösterilecek Türkçe metin karşılığı
   String get displayName {
     switch (this) {
       case UserRole.customer:
@@ -43,16 +46,17 @@ enum UserRole {
   }
 }
 
-/// Araç kategorileri
+/// Araç kasa/gövde kategorileri
 enum VehicleCategory {
-  sedan,
-  suv,
-  hatchback,
-  stationWagon,
-  commercial,
-  coupe,
-  luxury;
+  sedan, // Sedan kasa
+  suv, // Arazi / SUV araç
+  hatchback, // Kompakt hatchback
+  stationWagon, // Geniş bagajlı station wagon
+  commercial, // Ticari taşıma aracı / Van
+  coupe, // İki kapılı spor / coupe
+  luxury; // Premium / lüks sınıf
 
+  /// Kategori adının arayüzdeki Türkçe gösterimi
   String get displayName {
     switch (this) {
       case VehicleCategory.sedan:
@@ -73,13 +77,14 @@ enum VehicleCategory {
   }
 }
 
-/// Yakıt türleri
+/// Araçların motor/yakıt türleri
 enum FuelType {
-  gasoline,
-  diesel,
-  hybrid,
-  electric;
+  gasoline, // Benzinli motor
+  diesel, // Dizel motor
+  hybrid, // Benzin + Elektrik hibrit motor
+  electric; // %100 Elektrikli motor
 
+  /// Yakıt türünün Türkçe arayüz karşılığı
   String get displayName {
     switch (this) {
       case FuelType.gasoline:
@@ -94,11 +99,12 @@ enum FuelType {
   }
 }
 
-/// Vites türleri
+/// Şanzıman / vites türleri
 enum TransmissionType {
-  manual,
-  automatic;
+  manual, // Düz / manuel vites
+  automatic; // Otomatik vites
 
+  /// Vites tipinin Türkçe gösterimi
   String get displayName {
     switch (this) {
       case TransmissionType.manual:
@@ -109,11 +115,12 @@ enum TransmissionType {
   }
 }
 
-/// Teslimat türleri
+/// Aracın teslim alınma şekli
 enum DeliveryType {
-  branch,
-  address;
+  branch, // Müşteri aracı şubeden bizzat alır
+  address; // Araç müşterinin belirttiği adrese vale ile getirilir
 
+  /// Teslimat türünün arayüzdeki Türkçe adı
   String get displayName {
     switch (this) {
       case DeliveryType.branch:
@@ -124,12 +131,13 @@ enum DeliveryType {
   }
 }
 
-/// Ödeme yöntemleri
+/// Desteklenen simüle ödeme yöntemleri
 enum PaymentMethod {
-  creditCard,
-  bankTransfer,
-  cashAtBranch;
+  creditCard, // Kredi / banka kartı simülasyonu
+  bankTransfer, // Havale / EFT simülasyonu
+  cashAtBranch; // Şubede teslim sırasında nakit ödeme simülasyonu
 
+  /// Ödeme yönteminin ekranda gösterilen adı
   String get displayName {
     switch (this) {
       case PaymentMethod.creditCard:
@@ -142,13 +150,14 @@ enum PaymentMethod {
   }
 }
 
-/// Kiralama durumu
+/// Bir kiralamanın güncel işlem durumu
 enum RentalStatus {
-  approved,
-  active,
-  completed,
-  cancelled;
+  approved, // Rezervasyon alındı ve onaylandı
+  active, // Araç teslim edildi, kiralama fiilen devam ediyor
+  completed, // Araç geri teslim alındı ve kiralama tamamlandı
+  cancelled; // Kiralama iptal edildi
 
+  /// Durumun rozetlerde görünen Türkçe metni
   String get displayName {
     switch (this) {
       case RentalStatus.approved:
@@ -163,12 +172,13 @@ enum RentalStatus {
   }
 }
 
-/// Ödeme durumu
+/// Rezervasyona ait tahsilat / ödeme durumu
 enum PaymentStatus {
-  simulatedPaid,
-  payAtBranch,
-  pending;
+  simulatedPaid, // Simülasyon gereği tahsilat yapıldı
+  payAtBranch, // Araç teslim alınırken şubede ödenecek
+  pending; // Ödeme teyidi bekleniyor
 
+  /// Ödeme durumunun arayüzdeki etiketi
   String get displayName {
     switch (this) {
       case PaymentStatus.simulatedPaid:

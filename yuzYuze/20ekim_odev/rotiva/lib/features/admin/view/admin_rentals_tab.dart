@@ -1,5 +1,7 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, tarih araçları, formatlayıcılar ve durum rozetlerini içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../core/utils/formatters.dart';
@@ -11,6 +13,7 @@ import '../../rentals/models/rental.dart';
 /// Yönetici Kiralama ve Araç-Müşteri Eşleştirme Yönetimi Sekmesi.
 /// Tüm kiralamaları listeler, durum geçişlerini (Onayla, Aktif, Tamamla, İptal) yönetir.
 class AdminRentalsTab extends StatefulWidget {
+  // Statik const constructor tanımlıyoruz.
   const AdminRentalsTab({super.key});
 
   @override
@@ -18,14 +21,18 @@ class AdminRentalsTab extends StatefulWidget {
 }
 
 class _AdminRentalsTabState extends State<AdminRentalsTab> {
+  // Seçili durum filtresi (null ise tüm kiralamalar listelenir).
   RentalStatus? _filterStatus;
 
+  /// Kiralama durumunu güncelleyen asenkron metot.
   Future<void> _changeRentalStatus(
     Rental rental,
     RentalStatus newStatus,
   ) async {
+    // Veri deposuna erişiyoruz.
     final repository = RotivaScope.of(context).repository;
 
+    // Yöneticiden onay iletişim kutusu istiyoruz.
     final confirmed = await RotivaDialogs.showConfirmationDialog(
       context: context,
       title: 'Kiralama Durumunu Değiştir',
@@ -34,6 +41,7 @@ class _AdminRentalsTabState extends State<AdminRentalsTab> {
       confirmText: 'Durumu Güncelle',
     );
 
+    // Onay verildiyse ve widget ağaçtaysa veriyi güncelliyoruz.
     if (confirmed && mounted) {
       await repository.updateRentalStatus(rental.id, newStatus);
       if (mounted) {
@@ -48,9 +56,11 @@ class _AdminRentalsTabState extends State<AdminRentalsTab> {
 
   @override
   Widget build(BuildContext context) {
+    // Tema ve veri deposu referansları
     final theme = Theme.of(context);
     final repository = RotivaScope.of(context).repository;
 
+    // Filtreye göre kiralamaları süzüyoruz.
     final rentals = repository.rentals.where((r) {
       if (_filterStatus != null && r.rentalStatus != _filterStatus) {
         return false;
@@ -58,15 +68,18 @@ class _AdminRentalsTabState extends State<AdminRentalsTab> {
       return true;
     }).toList();
 
-    return Scaffold(
-      body: Column(
+    // Dış kabuktaki Scaffold ile çakışmaması için SafeArea + Column kullanıyoruz.
+    return SafeArea(
+      top: false, // Üst AppBar dış kabuk tarafından yönetiliyor.
+      child: Column(
         children: [
-          // Durum Filtresi Çipleri
+          // Durum Filtresi Çipleri (Yatay kaydırılabilir)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Row(
               children: [
+                // "Tümü" filtresi çipi
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
@@ -75,6 +88,7 @@ class _AdminRentalsTabState extends State<AdminRentalsTab> {
                     onSelected: (_) => setState(() => _filterStatus = null),
                   ),
                 ),
+                // Tüm kiralama durumları için dinamik çipler
                 ...RentalStatus.values.map(
                   (status) => Padding(
                     padding: const EdgeInsets.only(right: 8),
@@ -92,9 +106,8 @@ class _AdminRentalsTabState extends State<AdminRentalsTab> {
               ],
             ),
           ),
-          const Divider(height: 1),
-
-          // Kiralama Listesi
+          const Divider(height: 1), // Ayrım çizgisi
+          // Kiralama Listesi (Esnek ListView)
           Expanded(
             child: rentals.isEmpty
                 ? const Center(
@@ -113,7 +126,7 @@ class _AdminRentalsTabState extends State<AdminRentalsTab> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Üst Satır: Kod ve Durumlar
+                              // Üst Satır: Rezervasyon Kodu ve Durum Rozetleri
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -143,11 +156,15 @@ class _AdminRentalsTabState extends State<AdminRentalsTab> {
                                 children: [
                                   const Icon(Icons.person, size: 16),
                                   const SizedBox(width: 6),
-                                  Text(
-                                    'Müşteri: ${rental.customerName}',
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
+                                  Expanded(
+                                    child: Text(
+                                      'Müşteri: ${rental.customerName}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -157,19 +174,23 @@ class _AdminRentalsTabState extends State<AdminRentalsTab> {
                                 children: [
                                   const Icon(Icons.directions_car, size: 16),
                                   const SizedBox(width: 6),
-                                  Text(
-                                    'Araç: ${rental.vehicleName}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: theme.colorScheme.primary,
+                                  Expanded(
+                                    child: Text(
+                                      'Araç: ${rental.vehicleName}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: theme.colorScheme.primary,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 8),
 
-                              // Tarih ve Gün
+                              // Tarih ve Gün Bilgisi
                               Text(
                                 'Süre: ${RotivaDateUtils.formatDateRangeText(rental.startDate, rental.endDate)}',
                                 style: TextStyle(
@@ -179,7 +200,7 @@ class _AdminRentalsTabState extends State<AdminRentalsTab> {
                               ),
                               const SizedBox(height: 2),
 
-                              // Teslimat ve Ödeme
+                              // Teslimat ve Adres Bilgisi
                               Text(
                                 'Teslimat: ${rental.deliveryType.displayName} ${rental.deliveryAddress != null ? "(${rental.deliveryAddress})" : ""}',
                                 style: TextStyle(
@@ -188,6 +209,8 @@ class _AdminRentalsTabState extends State<AdminRentalsTab> {
                                 ),
                               ),
                               const SizedBox(height: 2),
+
+                              // Ödeme Yöntemi ve Kiralama Tutarı
                               Text(
                                 'Ödeme: ${rental.paymentMethod.displayName} • Tutar: ${RotivaFormatters.formatCurrency(rental.finalPrice)}',
                                 style: TextStyle(
@@ -200,7 +223,7 @@ class _AdminRentalsTabState extends State<AdminRentalsTab> {
                               const Divider(height: 1),
                               const SizedBox(height: 8),
 
-                              // Yönetici Durum Değiştirme Aksiyonları
+                              // Yönetici Durum Değiştirme Menüsü
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,

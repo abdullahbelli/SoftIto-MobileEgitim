@@ -1,5 +1,7 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, form doğrulayıcılar, ortak diyaloglar, logo ve veri kapsamını içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/dialogs.dart';
@@ -8,8 +10,10 @@ import '../../../core/widgets/rotiva_logo.dart';
 import '../../../core/widgets/rotiva_scope.dart';
 import '../../admin/view/admin_shell_screen.dart';
 
-/// Yönetici giriş ekranı (Ayrı giriş arayüzü).
+/// Yönetici giriş ekranı (Müşteri girişinden ayrı özel arayüz).
+/// Yöneticilerin araç CRUD ve filo istatistikleri paneline erişmesini sağlar.
 class AdminLoginScreen extends StatefulWidget {
+  // Statik const constructor tanımlıyoruz.
   const AdminLoginScreen({super.key});
 
   @override
@@ -17,25 +21,33 @@ class AdminLoginScreen extends StatefulWidget {
 }
 
 class _AdminLoginScreenState extends State<AdminLoginScreen> {
+  // Form doğrulama durumunu takip etmek için GlobalKey
   final _formKey = GlobalKey<FormState>();
+  // Yönetici e-posta ve şifre denetleyicileri (Demo kolaylığı için hazır doldurulur)
   final _emailController = TextEditingController(text: 'admin@rotiva.com');
   final _passwordController = TextEditingController(text: 'admin');
+  // Şifrenin gizli mi açık mı görüntüleneceğini tutan bayrak
   bool _obscurePassword = true;
+  // Giriş butonuna tıklandığında dönen çark animasyonunu kontrol eden durum bayrağı
   bool _isLoading = false;
 
   @override
   void dispose() {
+    // Bellek sızıntılarını önlemek için controller nesnelerini dispose ediyoruz.
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
+  /// Yönetici giriş işlemini yürüten asenkron metot
   Future<void> _handleAdminLogin() async {
+    // Form alanlarının geçerliliğini denetliyoruz.
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     final repository = RotivaScope.of(context).repository;
+    // Yalnızca admin rolündeki kullanıcıların girişine izin veriyoruz.
     final success = await repository.login(
       _emailController.text,
       _passwordController.text,
@@ -46,6 +58,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
+      // Giriş başarılıysa bildirim gösterip yönetici kabuğuna (AdminShellScreen) yönlendiriyoruz.
       RotivaDialogs.showSnackBar(
         context,
         'Yönetici girişi başarılı. Panel açılıyor...',
@@ -53,9 +66,10 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       );
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const AdminShellScreen()),
-        (route) => false,
+        (route) => false, // Geri tuşuyla giriş ekranına dönüşü engelliyoruz.
       );
     } else {
+      // Yetkisiz giriş uyarısı gösteriyoruz.
       RotivaDialogs.showSnackBar(
         context,
         'Yetkisiz giriş. Lütfen yönetici bilgilerinizi kontrol ediniz.',
@@ -74,6 +88,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
+            // Büyük ekranlarda formun aşırı yayılmasını engelleyen BoxConstraints
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Form(
@@ -82,6 +97,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Rotiva Logo Bileşeni
                     const Center(child: RotivaLogo(size: 72)),
                     const SizedBox(height: 16),
                     Text(
@@ -127,7 +143,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Hızlı Doldurma Çipi
+                    // Hızlı Doldurma Çipi (Eğitim testi kolaylığı sağlar)
                     Align(
                       alignment: Alignment.centerLeft,
                       child: ActionChip(
@@ -145,7 +161,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // E-posta
+                    // Yönetici E-posta Giriş Alanı
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -158,7 +174,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Şifre
+                    // Yönetici Şifre Giriş Alanı
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
@@ -184,7 +200,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Giriş Butonu
+                    // Yönetim Paneline Giriş Butonu
                     FilledButton(
                       style: FilledButton.styleFrom(
                         backgroundColor: theme.colorScheme.secondary,
@@ -201,6 +217,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                     ),
                     const SizedBox(height: 16),
 
+                    // Müşteri Ekranına Geri Dön Butonu
                     TextButton.icon(
                       icon: const Icon(Icons.arrow_back),
                       label: const Text('Müşteri Ekranına Dön'),

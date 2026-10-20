@@ -1,24 +1,26 @@
-import '../../core/constants/app_constants.dart';
-import '../../features/auth/models/app_user.dart';
-import '../../features/rentals/models/rental.dart';
-import '../../features/rentals/models/review.dart';
-import '../../features/vehicles/models/vehicle.dart';
+import '../../core/constants/app_constants.dart'; // Uygulama sabitleri ve enum tanımları.
+import '../../features/auth/models/app_user.dart'; // Kullanıcı veri modeli.
+import '../../features/rentals/models/rental.dart'; // Kiralama rezervasyon modeli.
+import '../../features/rentals/models/review.dart'; // Yorum ve puanlama modeli.
+import '../../features/vehicles/models/vehicle.dart'; // Araç veri modeli.
 
-/// Rotiva başlangıç demo verileri (Seed Data).
+/// Rotiva başlangıç demo tohum verileri (Mock Seed Data).
+/// Uygulama ilk kez kurulduğunda veya fabrika ayarlarına sıfırlandığında
+/// hafızaya ve yerel depoya yazılacak gerçekçi örnek verileri üretir.
 class MockSeed {
-  /// Demo Kullanıcılar (1 Yönetici + 5 Müşteri)
+  /// Demo Kullanıcılar (1 Demo Yönetici + 5 Müşteri)
   static List<AppUser> get initialUsers => [
-    // Demo Yönetici
+    // Demo Yönetici (Yönetici girişi ekranında kullanılır)
     AppUser(
-      id: 'usr_admin_01',
-      fullName: 'Rotiva Yönetici',
-      email: 'admin@rotiva.com',
-      phone: '0555 000 00 01',
-      role: UserRole.admin,
-      password: 'admin',
-      createdAt: DateTime(2026, 1, 1),
+      id: 'usr_admin_01', // Benzersiz kullanıcı kimliği
+      fullName: 'Rotiva Yönetici', // Ad soyad
+      email: 'admin@rotiva.com', // Demo yönetici e-postası
+      phone: '0555 000 00 01', // İletişim telefonu
+      role: UserRole.admin, // Yönetici rolü
+      password: 'admin', // Demo giriş şifresi
+      createdAt: DateTime(2026, 1, 1), // Hesap oluşturulma tarihi
     ),
-    // Müşteri 1
+    // Müşteri 1: Ahmet Yılmaz (~31 yaş, ~11 yıllık ehliyet)
     AppUser(
       id: 'usr_cust_01',
       fullName: 'Ahmet Yılmaz',
@@ -26,12 +28,12 @@ class MockSeed {
       phone: '0532 111 22 33',
       role: UserRole.customer,
       password: '123456',
-      driverBirthDate: DateTime(1995, 4, 15), // ~31 yaş
-      licenseIssueDate: DateTime(2015, 6, 20), // ~11 yıl
-      userScore: 4.9,
+      driverBirthDate: DateTime(1995, 4, 15), // Doğum tarihi
+      licenseIssueDate: DateTime(2015, 6, 20), // Ehliyet veriliş tarihi
+      userScore: 4.9, // 5 üzerinden müşteri skoru
       createdAt: DateTime(2026, 2, 10),
     ),
-    // Müşteri 2
+    // Müşteri 2: Ayşe Demir (~28 yaş, ~8 yıllık ehliyet)
     AppUser(
       id: 'usr_cust_02',
       fullName: 'Ayşe Demir',
@@ -39,12 +41,12 @@ class MockSeed {
       phone: '0542 222 33 44',
       role: UserRole.customer,
       password: '123456',
-      driverBirthDate: DateTime(1998, 8, 22), // ~28 yaş
-      licenseIssueDate: DateTime(2018, 9, 10), // ~8 yıl
+      driverBirthDate: DateTime(1998, 8, 22),
+      licenseIssueDate: DateTime(2018, 9, 10),
       userScore: 5.0,
       createdAt: DateTime(2026, 2, 14),
     ),
-    // Müşteri 3
+    // Müşteri 3: Mehmet Kaya (~24 yaş, ~4 yıllık ehliyet)
     AppUser(
       id: 'usr_cust_03',
       fullName: 'Mehmet Kaya',
@@ -52,12 +54,12 @@ class MockSeed {
       phone: '0505 333 44 55',
       role: UserRole.customer,
       password: '123456',
-      driverBirthDate: DateTime(2001, 11, 5), // ~24 yaş
-      licenseIssueDate: DateTime(2021, 12, 1), // ~4 yıl
+      driverBirthDate: DateTime(2001, 11, 5),
+      licenseIssueDate: DateTime(2021, 12, 1),
       userScore: 4.7,
       createdAt: DateTime(2026, 3, 1),
     ),
-    // Müşteri 4
+    // Müşteri 4: Zeynep Çelik (~34 yaş, ~14 yıllık ehliyet)
     AppUser(
       id: 'usr_cust_04',
       fullName: 'Zeynep Çelik',
@@ -65,12 +67,12 @@ class MockSeed {
       phone: '0533 444 55 66',
       role: UserRole.customer,
       password: '123456',
-      driverBirthDate: DateTime(1992, 1, 30), // ~34 yaş
-      licenseIssueDate: DateTime(2012, 3, 15), // ~14 yıl
+      driverBirthDate: DateTime(1992, 1, 30),
+      licenseIssueDate: DateTime(2012, 3, 15),
       userScore: 4.8,
       createdAt: DateTime(2026, 3, 15),
     ),
-    // Müşteri 5 (Genç sürücü, ehliyet süresi henüz az)
+    // Müşteri 5: Can Özkan (Genç sürücü, 22 yaş, 2 yıllık ehliyet)
     AppUser(
       id: 'usr_cust_05',
       fullName: 'Can Özkan',
@@ -78,14 +80,14 @@ class MockSeed {
       phone: '0534 555 66 77',
       role: UserRole.customer,
       password: '123456',
-      driverBirthDate: DateTime(2004, 5, 10), // ~22 yaş
-      licenseIssueDate: DateTime(2024, 6, 1), // ~2 yıl
+      driverBirthDate: DateTime(2004, 5, 10),
+      licenseIssueDate: DateTime(2024, 6, 1),
       userScore: 4.6,
       createdAt: DateTime(2026, 4, 1),
     ),
   ];
 
-  /// Demo Araçlar (12 farklı araç, çeşitli şehirler ve kategoriler)
+  /// Demo Araçlar (12 farklı araç, çeşitli şehirler, yakıtlar ve kategoriler)
   static List<Vehicle> get initialVehicles => [
     const Vehicle(
       id: 'veh_01',
@@ -341,9 +343,9 @@ class MockSeed {
     ),
   ];
 
-  /// Demo Kiralamalar
+  /// Demo Kiralamalar (Geçmiş, aktif ve onaylanmış rezervasyonlar)
   static List<Rental> get initialRentals => [
-    // Tamamlanmış kiralama 1 (Ahmet Yılmaz - Renault Megane)
+    // Tamamlanmış kiralama 1 (Ahmet Yılmaz - Renault Megane - Şubede Nakit %10 İndirimli)
     Rental(
       id: 'rent_01',
       reservationCode: 'RTV-2026-1001',
@@ -361,14 +363,14 @@ class MockSeed {
       paymentMethod: PaymentMethod.cashAtBranch,
       basePrice: 3600.0,
       deliveryFee: 0.0,
-      discount: 360.0, // %10 nakit indirimi
+      discount: 360.0, // %10 nakit indirimi uygulandı
       finalPrice: 3240.0,
       paymentStatus: PaymentStatus.simulatedPaid,
       rentalStatus: RentalStatus.completed,
       agreementAcceptedAt: DateTime(2026, 9, 9, 14, 30),
       createdAt: DateTime(2026, 9, 9, 14, 30),
     ),
-    // Aktif kiralama (Ayşe Demir - Toyota Corolla)
+    // Aktif kiralama (Ayşe Demir - Toyota Corolla - Ek km paketli ve adrese teslim)
     Rental(
       id: 'rent_02',
       reservationCode: 'RTV-2026-1002',
@@ -381,11 +383,11 @@ class MockSeed {
       rentalDays: 3,
       dailyKmLimitChosen: 500,
       hasExtraKm: true,
-      additionalKmCost: 660.0, // 3 * 220
+      additionalKmCost: 660.0, // 3 gün * 220 TL
       deliveryType: DeliveryType.address,
       deliveryAddress: 'Çankaya Mah. Atatürk Bulvarı No: 42, Ankara',
       paymentMethod: PaymentMethod.creditCard,
-      basePrice: 4350.0, // 3 * 1450
+      basePrice: 4350.0, // 3 gün * 1450 TL
       deliveryFee: 400.0,
       discount: 0.0,
       finalPrice: 5410.0,
@@ -410,7 +412,7 @@ class MockSeed {
       additionalKmCost: 0,
       deliveryType: DeliveryType.branch,
       paymentMethod: PaymentMethod.bankTransfer,
-      basePrice: 7800.0, // 4 * 1950
+      basePrice: 7800.0, // 4 gün * 1950 TL
       deliveryFee: 0.0,
       discount: 0.0,
       finalPrice: 7800.0,
@@ -421,7 +423,7 @@ class MockSeed {
     ),
   ];
 
-  /// Demo Değerlendirmeler / Yorumlar
+  /// Demo Değerlendirmeler / Müşteri Yorumları (Tamamlanan kiralamalar için)
   static List<Review> get initialReviews => [
     Review(
       id: 'rev_01',

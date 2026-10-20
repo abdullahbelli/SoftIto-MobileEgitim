@@ -1,5 +1,7 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, metinler, form doğrulayıcılar, diyaloglar ve veri kapsamını içeri aktarıyoruz.
 import '../../../core/constants/demo_texts.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/dialogs.dart';
@@ -10,8 +12,10 @@ import '../../home/view/customer_shell_screen.dart';
 import 'customer_login_screen.dart';
 
 /// Yeni müşteri kayıt ekranı.
-/// KVKK ve Açık Rıza onaylarını diyaloglarla inceleme ve doğrulama zorunluluğu içerir.
+/// Ad, soyad, e-posta, telefon ve şifre girişlerini toplar.
+/// KVKK ve Açık Rıza onaylarını inceleme diyaloglarıyla birlikte doğrulama zorunluluğu sunar.
 class RegisterScreen extends StatefulWidget {
+  // Statik const constructor tanımlıyoruz.
   const RegisterScreen({super.key});
 
   @override
@@ -19,21 +23,26 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  // Form doğrulama anahtarı
   final _formKey = GlobalKey<FormState>();
-  final _fullNameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
 
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
-  bool _kvkkAccepted = false;
-  bool _consentAccepted = false;
-  bool _isLoading = false;
+  // Metin giriş denetleyicileri
+  final _fullNameController = TextEditingController(); // Ad Soyad
+  final _emailController = TextEditingController(); // E-posta
+  final _phoneController = TextEditingController(); // Telefon
+  final _passwordController = TextEditingController(); // Şifre
+  final _confirmPasswordController = TextEditingController(); // Şifre Tekrarı
+
+  // Şifre görünürlüğü ve onay kutuları durum bayrakları
+  bool _obscurePassword = true; // Şifre gizli mi?
+  bool _obscureConfirmPassword = true; // Şifre tekrarı gizli mi?
+  bool _kvkkAccepted = false; // KVKK metni kabul edildi mi?
+  bool _consentAccepted = false; // Açık rıza metni kabul edildi mi?
+  bool _isLoading = false; // Kayıt işlemi devam ediyor mu?
 
   @override
   void dispose() {
+    // Bellek sızıntılarını önlemek için tüm denetleyicileri serbest bırakıyoruz.
     _fullNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
@@ -42,6 +51,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  /// KVKK metnini açılır kaydırılabilir diyalog penceresinde gösteren metot
   void _showKvkkDialog() {
     RotivaDialogs.showScrollableContentDialog(
       context: context,
@@ -50,6 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  /// Açık Rıza metnini açılır kaydırılabilir diyalog penceresinde gösteren metot
   void _showConsentDialog() {
     RotivaDialogs.showScrollableContentDialog(
       context: context,
@@ -58,11 +69,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  /// Kayıt işlemini gerçekleştiren asenkron fonksiyon
   Future<void> _handleRegister() async {
-    // 1. Form doğrulaması
+    // 1. Form alanlarının doğruluğunu kontrol ediyoruz.
     if (!_formKey.currentState!.validate()) return;
 
-    // 2. Zorunlu onay kontrolleri
+    // 2. Zorunlu yasal onay kontrolleri (KVKK ve Açık Rıza)
     if (!_kvkkAccepted || !_consentAccepted) {
       RotivaDialogs.showSnackBar(
         context,
@@ -75,6 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     final repository = RotivaScope.of(context).repository;
+    // Repository üzerinden yeni müşteri kaydını yapıyoruz.
     final success = await repository.register(
       fullName: _fullNameController.text,
       email: _emailController.text,
@@ -86,6 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
+      // Kayıt başarılıysa bildirim verip doğrudan müşteri ana ekranına yönlendiriyoruz.
       RotivaDialogs.showSnackBar(
         context,
         'Kaydınız başarıyla oluşturuldu! Hoş geldiniz.',
@@ -96,6 +110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         (route) => false,
       );
     } else {
+      // E-posta mükerrerse hata mesajı veriyoruz.
       RotivaDialogs.showSnackBar(
         context,
         'Bu e-posta adresi ile zaten bir hesap bulunmaktadır.',
@@ -122,6 +137,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Rotiva Logo Bileşeni
                     const Center(child: RotivaLogo(size: 64)),
                     const SizedBox(height: 12),
                     Text(
@@ -141,7 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Ad Soyad
+                    // Ad Soyad Giriş Alanı
                     TextFormField(
                       controller: _fullNameController,
                       textCapitalization: TextCapitalization.words,
@@ -156,7 +172,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 14),
 
-                    // E-posta
+                    // E-posta Giriş Alanı
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -170,7 +186,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 14),
 
-                    // Telefon
+                    // Telefon Numarası Giriş Alanı
                     TextFormField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
@@ -184,7 +200,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 14),
 
-                    // Şifre
+                    // Şifre Giriş Alanı
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
@@ -210,7 +226,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 14),
 
-                    // Şifre Tekrar
+                    // Şifre Tekrarı Giriş Alanı
                     TextFormField(
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
@@ -339,7 +355,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Kayıt Ol Butonu
+                    // Kayıt Ol ve Giriş Yap Butonu
                     FilledButton(
                       onPressed:
                           (_isLoading || !_kvkkAccepted || !_consentAccepted)
@@ -355,7 +371,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Zaten hesabı olanlar için giriş linki
+                    // Zaten hesabı olanlar için Giriş Yap yönlendirme bağlantısı
                     Wrap(
                       alignment: WrapAlignment.center,
                       crossAxisAlignment: WrapCrossAlignment.center,

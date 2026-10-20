@@ -1,5 +1,7 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, doğrulayıcılar, ortak diyaloglar, logo ve veri kapsamını içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/dialogs.dart';
@@ -10,7 +12,10 @@ import '../../home/view/customer_shell_screen.dart';
 import 'register_screen.dart';
 
 /// Müşteri giriş ekranı.
+/// Müşterilerin e-posta ve şifre ile kimlik doğrulaması yapmasını sağlar.
+/// Hızlı test için önceden tanımlı demo müşteri hesap butonları içerir.
 class CustomerLoginScreen extends StatefulWidget {
+  // Statik const constructor tanımlıyoruz.
   const CustomerLoginScreen({super.key});
 
   @override
@@ -18,42 +23,53 @@ class CustomerLoginScreen extends StatefulWidget {
 }
 
 class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
+  // Formun validasyon durumunu yönetmek için anahtar
   final _formKey = GlobalKey<FormState>();
+  // E-posta ve şifre metin denetleyicileri
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  // Şifrenin gizli mi açık mı görüntüleneceğini tutan bayrak
   bool _obscurePassword = true;
+  // Giriş butonuna basıldığında yüklenme animasyonunu kontrol eden durum değişkeni
   bool _isLoading = false;
 
   @override
   void dispose() {
+    // Bellek sızıntılarını önlemek için controller nesnelerini dispose ediyoruz.
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
+  /// Demo hesap bilgilerini hızlıca form alanlarına dolduran yardımcı metot
   void _fillDemoAccount(String email) {
     setState(() {
       _emailController.text = email;
-      _passwordController.text = '123456';
+      _passwordController.text = '123456'; // Demo standart şifresi
     });
   }
 
+  /// Giriş işlemini yürüten asenkron fonksiyon
   Future<void> _handleLogin() async {
+    // Formdaki e-posta ve şifre kurallarını denetliyoruz.
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() => _isLoading = true); // Yükleniyor durumuna geçiriyoruz.
 
     final repository = RotivaScope.of(context).repository;
+    // Müşteri rolü beklentisiyle giriş denemesi yapıyoruz.
     final success = await repository.login(
       _emailController.text,
       _passwordController.text,
       expectedRole: UserRole.customer,
     );
 
+    // Widget ağaçta değilse devam etmiyoruz (mounted kontrolü).
     if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (success) {
+      // Giriş başarılıysa bildirim gösterip müşteri ana kabuğuna yönlendiriyoruz.
       RotivaDialogs.showSnackBar(
         context,
         'Giriş başarılı! Hoş geldiniz, ${repository.currentUser?.fullName}',
@@ -61,9 +77,11 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
       );
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const CustomerShellScreen()),
-        (route) => false,
+        (route) =>
+            false, // Geri tuşuyla giriş ekranına dönülmesini engelliyoruz.
       );
     } else {
+      // Giriş başarısızsa hata mesajı gösteriyoruz.
       RotivaDialogs.showSnackBar(
         context,
         'Giriş başarısız. E-posta veya şifre hatalı.',
@@ -82,6 +100,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
+            // Formun geniş ekranlarda aşırı yayılmasını engelleyen genişlik kısıtlaması
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Form(
@@ -90,6 +109,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Rotiva Logo Bileşeni
                     const Center(child: RotivaLogo(size: 72)),
                     const SizedBox(height: 16),
                     Text(
@@ -109,7 +129,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Demo Hesap Hızlı Seçim Çipleri
+                    // Demo Hesap Hızlı Seçim Çipleri (Test kolaylığı sağlar)
                     Text(
                       'Hızlı Demo Seçimi:',
                       style: TextStyle(
@@ -142,7 +162,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // E-posta Alanı
+                    // E-posta Metin Giriş Alanı
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -156,7 +176,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Şifre Alanı
+                    // Şifre Metin Giriş Alanı (Göz simgesiyle görünürlük değiştirilebilir)
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
@@ -183,7 +203,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Giriş Butonu
+                    // Giriş Yap Butonu
                     FilledButton(
                       onPressed: _isLoading ? null : _handleLogin,
                       child: _isLoading
@@ -196,7 +216,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Kayıt Ol Yönlendirmesi
+                    // Kayıt Ol Ekranına Yönlendirme Bağlantısı
                     Wrap(
                       alignment: WrapAlignment.center,
                       crossAxisAlignment: WrapCrossAlignment.center,

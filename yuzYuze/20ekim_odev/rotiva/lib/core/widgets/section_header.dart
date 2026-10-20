@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Material Design arayüz bileşenleri.
 
-/// Sayfalarda bölüm başlığı ve varsa sağ aksiyon butonu gösteren bileşen.
+/// Sayfalarda bölüm başlığı, açıklama metni ve varsa sağ aksiyon butonu gösteren tekrar kullanılabilir bileşen.
 class SectionHeader extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final Widget? trailing;
-  final EdgeInsetsGeometry padding;
+  final String title; // Bölümün ana başlığı (Örn: 'Son Kiralama Hareketleri')
+  final String? subtitle; // Başlığın altındaki açıklayıcı küçük metin
+  final Widget? trailing; // Başlığın sağ tarafına konulabilecek ek buton veya etiket (Örn: 'Tümünü Gör')
+  final EdgeInsetsGeometry padding; // Başlığın dış boşluğu
 
   const SectionHeader({
     super.key,
@@ -17,7 +17,7 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme = Theme.of(context); // Tema tipografi stillerini almak için
 
     return Padding(
       padding: padding,
@@ -25,11 +25,13 @@ class SectionHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Başlık ve alt başlığı barındıran genişleyebilir alan
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Ana Bölüm Başlığı
                 Text(
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
@@ -37,6 +39,7 @@ class SectionHeader extends StatelessWidget {
                     letterSpacing: 0.1,
                   ),
                 ),
+                // Varsa alt başlık metni
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
                   Text(
@@ -49,6 +52,7 @@ class SectionHeader extends StatelessWidget {
               ],
             ),
           ),
+          // Sağ tarafa eklenmiş trailing widget (buton vb.) varsa ekliyoruz
           ?trailing,
         ],
       ),

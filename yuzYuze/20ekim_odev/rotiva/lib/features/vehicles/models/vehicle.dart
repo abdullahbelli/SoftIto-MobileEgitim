@@ -1,27 +1,34 @@
+// Araç kategorisi, yakıt türü ve vites türü enum'larını içeren sabitler dosyasını içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 
-/// Rotiva kiralık araç modeli.
+/// Rotiva kiralık araç veri modeli.
+/// Aracın marka, model, yaş/ehliyet şartı, km limitleri ve fiyatlandırma bilgilerini tutar.
 class Vehicle {
-  final String id;
-  final String brand;
-  final String model;
-  final int year;
-  final VehicleCategory category;
-  final FuelType fuelType;
-  final TransmissionType transmission;
-  final String city;
-  final String district;
-  final String imagePath;
-  final double hourlyRate; // Bilgi amaçlı saatlik ücret
+  final String id; // Aracın benzersiz kimliği (Örn: veh_1)
+  final String brand; // Araç markası (Örn: Renault, Fiat)
+  final String model; // Araç modeli (Örn: Megane, Egea)
+  final int year; // Model üretim yılı (Örn: 2023)
+  final VehicleCategory category; // Araç kasa kategorisi (Sedan, SUV vb.)
+  final FuelType fuelType; // Yakıt türü (Benzin, Dizel, Elektrik, Hibrit)
+  final TransmissionType transmission; // Vites türü (Otomatik, Manuel)
+  final String city; // Aracın bulunduğu şehir (Örn: İstanbul)
+  final String district; // Aracın bulunduğu ilçe (Örn: Kadıköy)
+  final String imagePath; // Araç görsel yolu veya yerel asset referansı
+  final double hourlyRate; // Kullanıcıyı bilgilendirme amaçlı saatlik ücret (Demo kuralı gereği kiralama günlük yapılır)
   final double dailyRate; // Asıl günlük kiralama ücreti
-  final int minimumAge; // Sürücü yaş şartı
-  final int minimumLicenseYears; // Ehliyet yılı şartı
-  final int dailyKmLimit; // Standart günlük km sınırı
-  final int additionalDailyKm; // Ek pakette verilen günlük ekstra km
-  final double additionalKmDailyPrice; // Ek km paketinin günlük bedeli
-  final double addressDeliveryFee; // Adrese teslimat ücreti
-  final bool isActive; // Araç aktif/müsait mi
+  final int minimumAge; // Aracı kiralamak için gereken minimum sürücü yaşı
+  final int minimumLicenseYears; // Aracı kiralamak için gereken minimum ehliyet süresi (yıl)
+  final int
+  dailyKmLimit; // Standart paketteki günlük kilometre sınırı (Örn: 300 km)
+  final int additionalDailyKm; // Ekstra kilometre paketinde günlük verilen ilave km (Örn: 150 km)
+  final double
+  additionalKmDailyPrice; // Ek kilometre paketinin günlük ücreti (Örn: 200 TL)
+  final double
+  addressDeliveryFee; // Aracın adrese teslim edilme hizmet bedeli (Örn: 400 TL)
+  final bool
+  isActive; // Aracın kiralama aramalarında görünür olup olmadığı (Aktif/Pasif)
 
+  // Değiştirilemez (immutable) const constructor
   const Vehicle({
     required this.id,
     required this.brand,
@@ -41,12 +48,15 @@ class Vehicle {
     required this.additionalDailyKm,
     required this.additionalKmDailyPrice,
     required this.addressDeliveryFee,
-    this.isActive = true,
+    this.isActive = true, // Varsayılan olarak araçlar aktif başlar.
   });
 
+  // Marka ve modeli bir arada gösteren pratik getter (Örn: "Renault Megane")
   String get displayName => '$brand $model';
+  // Şehir ve ilçeyi formatlı gösteren getter (Örn: "İstanbul / Kadıköy")
   String get location => '$city / $district';
 
+  /// Aracın kopyasını oluşturup istenen alanları güncelleyen yardımcı copyWith metodu
   Vehicle copyWith({
     String? id,
     String? brand,
@@ -92,6 +102,7 @@ class Vehicle {
     );
   }
 
+  /// SharedPreferences'ta saklamak üzere Map (JSON) objesine çeviren metot
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -116,6 +127,7 @@ class Vehicle {
     };
   }
 
+  /// JSON sözlüğünden (Map) Vehicle nesnesi inşa eden fabrika kurucusu (Factory Constructor)
   factory Vehicle.fromJson(Map<String, dynamic> json) {
     return Vehicle(
       id: json['id'] as String,

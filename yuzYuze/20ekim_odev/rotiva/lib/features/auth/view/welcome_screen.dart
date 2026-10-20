@@ -1,23 +1,29 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, özel logo bileşeni ve veri kapsamını içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 import '../../../core/widgets/rotiva_logo.dart';
 import '../../../core/widgets/rotiva_scope.dart';
+// Giriş ve kayıt ekranlarını içeri aktarıyoruz.
 import 'admin_login_screen.dart';
 import 'customer_login_screen.dart';
 import 'register_screen.dart';
 
 /// Rotiva açılış ve karşılama ekranı.
-/// Müşteri Girişi, Kayıt Ol ve Yönetici Girişi seçeneklerini sunar.
+/// Müşteri Girişi, Yeni Hesap Oluştur (Kayıt Ol) ve Yönetici Girişi seçeneklerini sunar.
 class WelcomeScreen extends StatelessWidget {
+  // Statik const constructor tanımlıyoruz.
   const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Mevcut tema ve tema denetleyicisine erişiyoruz.
     final theme = Theme.of(context);
     final themeController = RotivaScope.of(context).themeController;
 
     return Scaffold(
+      // Şeffaf AppBar üzerinde hızlı tema değiştirme butonu
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -34,6 +40,7 @@ class WelcomeScreen extends StatelessWidget {
                   ? const Color(0xFFFF922B)
                   : const Color(0xFF1565C0),
             ),
+            // Temayı dinamik olarak açık ve koyu mod arasında değiştiriyoruz.
             onPressed: () => themeController.toggleTheme(),
           ),
           const SizedBox(width: 8),
@@ -43,12 +50,13 @@ class WelcomeScreen extends StatelessWidget {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            // Büyük ekranlarda (tablet, masaüstü) formun çok genişlemesini önlemek için ConstrainedBox kullanıyoruz.
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 440),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo ve Marka Başlığı
+                  // Rotiva Özel Vektörel Logosu ve Marka Başlığı
                   const RotivaLogo(
                     size: 96,
                     showText: true,
@@ -56,7 +64,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 36),
 
-                  // Tanıtıcı Kart
+                  // Uygulama Özelliklerini Tanıtan Bilgi Kartı
                   Card(
                     elevation: 0,
                     color: theme.colorScheme.surfaceContainerHighest
@@ -92,7 +100,7 @@ class WelcomeScreen extends StatelessWidget {
 
                   const SizedBox(height: 36),
 
-                  // Giriş Yap Butonu (Müşteri)
+                  // Müşteri Giriş Yap Butonu
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -100,6 +108,7 @@ class WelcomeScreen extends StatelessWidget {
                       icon: const Icon(Icons.login),
                       label: const Text('Giriş Yap'),
                       onPressed: () {
+                        // Müşteri giriş ekranına geçiş yapıyoruz.
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => const CustomerLoginScreen(),
@@ -110,7 +119,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // Kayıt Ol Butonu
+                  // Yeni Müşteri Kayıt Ol Butonu
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -118,6 +127,7 @@ class WelcomeScreen extends StatelessWidget {
                       icon: const Icon(Icons.person_add_outlined),
                       label: const Text('Yeni Hesap Oluştur'),
                       onPressed: () {
+                        // Kayıt form ekranına yönlendiriyoruz.
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => const RegisterScreen(),
@@ -130,7 +140,7 @@ class WelcomeScreen extends StatelessWidget {
 
                   const Divider(height: 24),
 
-                  // Yönetici Girişi (Demo)
+                  // Yönetici Girişi Butonu (Demo Panel)
                   TextButton.icon(
                     style: TextButton.styleFrom(
                       foregroundColor: theme.colorScheme.secondary,
@@ -138,6 +148,7 @@ class WelcomeScreen extends StatelessWidget {
                     icon: const Icon(Icons.admin_panel_settings_outlined),
                     label: const Text('Yönetici Girişi (Demo Panel)'),
                     onPressed: () {
+                      // Yönetici paneli giriş ekranına geçiyoruz.
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const AdminLoginScreen(),
@@ -147,6 +158,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 8),
+                  // Eğitim Projesi ve Sürüm Bilgisi
                   Text(
                     'SoftIto Mobil Eğitim Projesi • ${AppConstants.appVersion}',
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -165,6 +177,7 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
+  /// Karşılama kartındaki özellik maddesini oluşturan yardımcı metot
   Widget _buildFeatureRow({
     required IconData icon,
     required String text,

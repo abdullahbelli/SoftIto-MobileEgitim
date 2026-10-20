@@ -1,5 +1,7 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, formatlayıcılar ve özel widget'ları içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/rotiva_scope.dart';
@@ -8,22 +10,30 @@ import '../../../core/widgets/status_badge.dart';
 
 /// Yönetici Dashboard (Özet Paneli) sekmesi.
 /// Filo durumu, müşteri sayısı, aktif kiralamalar ve ciro gibi temel KPI metriklerini gösterir.
+/// Responsive tasarımı sayesinde mobil, tablet ve masaüstü ekranlarda taşma (overflow) yapmaz.
 class AdminDashboardTab extends StatelessWidget {
+  // Statik ve sabit widget optimizasyonu için const constructor tanımlıyoruz.
   const AdminDashboardTab({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Mevcut tema ve renk şemasına erişiyoruz.
     final theme = Theme.of(context);
+    // Veri deposuna (repository) InheritedWidget olan RotivaScope üzerinden erişiyoruz.
     final repository = RotivaScope.of(context).repository;
 
+    // Filodaki tüm araçları ve aktif araç sayısını alıyoruz.
     final allVehicles = repository.vehicles;
     final totalVehicles = allVehicles.length;
     final activeVehicles = repository.activeVehicles.length;
 
+    // Sistemde kayıtlı yalnızca müşteri rolündeki kullanıcıları filtreliyoruz.
     final customers = repository.users.where((u) => u.isCustomer).toList();
     final totalCustomers = customers.length;
 
+    // Tüm kiralama kayıtlarını alıyoruz.
     final allRentals = repository.rentals;
+    // Devam eden veya onaylanmış aktif rezervasyonları filtreliyoruz.
     final activeRentals = allRentals
         .where(
           (r) =>
@@ -32,7 +42,7 @@ class AdminDashboardTab extends StatelessWidget {
         )
         .toList();
 
-    // Bekleyen nakit ödemeleri
+    // Şubede nakit ödenecek bekleyen tutarları hesaplıyoruz (İptal edilenler hariç).
     final pendingCashRentals = allRentals
         .where(
           (r) =>
@@ -40,34 +50,43 @@ class AdminDashboardTab extends StatelessWidget {
               r.rentalStatus != RentalStatus.cancelled,
         )
         .toList();
+    // fold metoduyla bekleyen nakit kiralama tutarlarını topluyoruz.
     final pendingCashTotal = pendingCashRentals.fold<double>(
       0.0,
       (sum, r) => sum + r.finalPrice,
     );
 
-    // Tahmini toplam ciro
+    // İptal edilmemiş tüm kiralamaların toplam cirosunu hesaplıyoruz.
     final totalRevenue = allRentals
         .where((r) => r.rentalStatus != RentalStatus.cancelled)
         .fold<double>(0.0, (sum, r) => sum + r.finalPrice);
 
-    return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+    // Dış kabuktaki (AdminShellScreen) Scaffold ile çakışmayı önlemek için doğrudan SafeArea ve SingleChildScrollView kullanıyoruz.
+    return SafeArea(
+      top: false, // Üst AppBar ile çakışmayı önlemek için üst safeArea kapalı
+      bottom: true, // Alt navigasyon çubuğu için alt safeArea açık
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(
+          16,
+        ), // Sayfa çevresine 16px iç boşluk veriyoruz.
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Hoş Geldiniz Bannerı
+            // Üst Karşılama ve Genel Durum Bannerı
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
+                // Şık bir degradeli (gradient) arka plan rengi uyguluyoruz.
                 gradient: LinearGradient(
                   colors: [
                     theme.colorScheme.primary.withOpacity(0.15),
                     theme.colorScheme.secondary.withOpacity(0.1),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(
+                  16,
+                ), // Köşeleri yuvarlatıyoruz.
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +108,7 @@ class AdminDashboardTab extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // KPI Metrik Kartları Grid
+            // KPI Metrik Kartları 1. Satır: Toplam Müşteri ve Toplam Araç
             Row(
               children: [
                 Expanded(
@@ -114,6 +133,8 @@ class AdminDashboardTab extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
+
+            // KPI Metrik Kartları 2. Satır: Aktif Rezervasyon ve Bekleyen Nakit
             Row(
               children: [
                 Expanded(
@@ -139,7 +160,7 @@ class AdminDashboardTab extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // Toplam Ciro Kartı
+            // Toplam Kiralama Cirosu Kartı
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -153,37 +174,47 @@ class AdminDashboardTab extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.monetization_on_outlined,
-                        size: 32,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Toplam Kiralama Cirosu (Demo)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.monetization_on_outlined,
+                          size: 32,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Toplam Kiralama Cirosu (Demo)',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              // Metin dar ekranlarda taşmasın diye FittedBox kullanıyoruz.
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  RotivaFormatters.formatCurrency(totalRevenue),
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w900,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            RotivaFormatters.formatCurrency(totalRevenue),
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -214,6 +245,7 @@ class AdminDashboardTab extends StatelessWidget {
             ),
             const SizedBox(height: 10),
 
+            // Kiralama listesi boşsa bilgilendirme, doluysa son hareketler kartları
             if (allRentals.isEmpty)
               const Center(
                 child: Padding(
@@ -222,47 +254,81 @@ class AdminDashboardTab extends StatelessWidget {
                 ),
               )
             else
+              // ListTile trailing alanındaki 2px dikey taşmayı önlemek için esnek Card + Row mimarisi kullanıyoruz.
               ...allRentals
                   .take(4)
                   .map(
                     (rental) => Card(
                       margin: const EdgeInsets.only(bottom: 10),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: theme.colorScheme.primary
-                              .withOpacity(0.12),
-                          child: Icon(
-                            Icons.car_rental,
-                            color: theme.colorScheme.primary,
-                          ),
+                      elevation: 1,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
                         ),
-                        title: Text(
-                          '${rental.customerName} • ${rental.vehicleName}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                          ),
-                        ),
-                        subtitle: Text(
-                          '${rental.reservationCode} • ${rental.rentalDays} Gün • ${rental.paymentMethod.displayName}',
-                          style: const TextStyle(fontSize: 11),
-                        ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              RotivaFormatters.formatCurrency(
-                                rental.finalPrice,
-                              ),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
+                            // Sol Araç Simgesi Avatarı
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: theme.colorScheme.primary
+                                  .withOpacity(0.12),
+                              child: Icon(
+                                Icons.car_rental,
+                                size: 20,
                                 color: theme.colorScheme.primary,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            StatusBadge.rental(rental.rentalStatus),
+                            const SizedBox(width: 12),
+                            // Orta Bilgi Alanı: Müşteri Adı, Araç Adı, Rezervasyon Kodu
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '${rental.customerName} • ${rental.vehicleName}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                    ),
+                                    maxLines: 1, // Uzun isimlerin taşmaması için tek satır
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    '${rental.reservationCode} • ${rental.rentalDays} Gün • ${rental.paymentMethod.displayName}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Sağ Bilgi Alanı: Tutar ve Durum Rozeti (Sabit kısıtlamasız, esnek yükseklik)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  RotivaFormatters.formatCurrency(
+                                    rental.finalPrice,
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                StatusBadge.rental(rental.rentalStatus),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -275,6 +341,7 @@ class AdminDashboardTab extends StatelessWidget {
     );
   }
 
+  /// KPI istatistik kartlarını oluşturan yardımcı metot.
   Widget _buildMetricCard({
     required String title,
     required String value,
@@ -290,27 +357,37 @@ class AdminDashboardTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Üst satır: Başlık ve ilgili simge
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurfaceVariant,
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 Icon(icon, size: 20, color: color),
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: theme.colorScheme.onSurface,
+            // Alt satır: Metrik değeri (Dar ekranlarda taşmayı önlemek için FittedBox)
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ),
           ],

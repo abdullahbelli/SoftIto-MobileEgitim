@@ -1,5 +1,7 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, tarih araçları, formatlayıcılar, diyaloglar, rozetler ve modelleri içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../core/utils/formatters.dart';
@@ -14,12 +16,15 @@ import '../models/review.dart';
 /// Müşteri Kiralamalarım sekmesi.
 /// Aktif, onaylı ve geçmiş kiralamaları listeler; tamamlanan kiralamalar için yıldız ve yorum bırakma imkanı sunar.
 class MyRentalsTabView extends StatelessWidget {
+  // Statik const constructor tanımlıyoruz.
   const MyRentalsTabView({super.key});
 
+  /// Tamamlanan kiralama için yorum ve yıldız verme diyaloğunu açar.
   void _showAddReviewDialog(BuildContext context, Rental rental) {
     int selectedStars = 5;
     final commentController = TextEditingController();
     final repository = RotivaScope.of(context).repository;
+    // Önceden yorum yapılmışsa mevcut yorumu getiriyoruz (Düzenleme modu).
     final existingReview = repository.getReviewForRental(rental.id);
 
     if (existingReview != null) {
@@ -52,6 +57,7 @@ class MyRentalsTabView extends StatelessWidget {
                       style: TextStyle(fontSize: 13),
                     ),
                     const SizedBox(height: 6),
+                    // 5 Yıldız Seçim İkonları
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(5, (index) {
@@ -71,6 +77,7 @@ class MyRentalsTabView extends StatelessWidget {
                       }),
                     ),
                     const SizedBox(height: 12),
+                    // Yorum Metin Giriş Alanı
                     TextField(
                       controller: commentController,
                       maxLines: 3,
@@ -98,6 +105,7 @@ class MyRentalsTabView extends StatelessWidget {
                       return;
                     }
 
+                    // Yeni veya güncellenmiş Review nesnesi oluşturuyoruz.
                     final newReview = Review(
                       id:
                           existingReview?.id ??
@@ -137,6 +145,7 @@ class MyRentalsTabView extends StatelessWidget {
     final repository = RotivaScope.of(context).repository;
     final currentUser = repository.currentUser;
 
+    // Giriş yapan müşteriye ait kiralamaları alıyoruz.
     final customerRentals = currentUser != null
         ? repository.getRentalsForCustomer(currentUser.id)
         : <Rental>[];

@@ -279,3 +279,43 @@
 - `flutter test`: **29/29 test başarıyla geçti (All tests passed!)**.
 - Çıkış yapma, profil düzenleme, tema koruma ve rozet renklerinin doğru gösterimi doğrulandı.
 
+---
+
+## 15. Yönetici Dashboard Overflow Çözümü, Responsive İyileştirmeler ve Kalıcı Türkçe Kod Standardı (20 Ekim)
+
+### 15.1 Yönetici Dashboard Overflow Düzeltmesi (`BOTTOM OVERFLOWED BY 2.0 PIXELS`)
+- **Sorunun Kök Nedeni:** `AdminDashboardTab` içerisindeki "Son Kiralama Hareketleri" listesinde `ListTile` kullanılıyordu. `ListTile` bileşeni `trailing` alanı için sabit dikey yükseklik sınırlaması (kısıtı) koyar (~48-56px). Trailing içinde yer alan Fiyat metni (`RotivaFormatters.formatCurrency`), `SizedBox(height: 4)` ve kiralama durumu rozeti (`StatusBadge.rental`) toplamda bu ayrılan dikey kutuyu tam olarak **2.0 piksel** aşıyordu.
+- **Uygulanan Çözüm:** 
+  - `ListTile` kaldırıldı ve yerine dinamik yükseklik alabilen esnek bir `Card` + `Padding(horizontal: 14, vertical: 12)` + `Row` mimarisi uygulandı.
+  - Sol tarafta `CircleAvatar` ile araç simgesi konumlandırıldı.
+  - Orta bilgi alanında müşteri adı, araç adı, rezervasyon kodu ve kiralama günü `Expanded` içinde `maxLines: 1` ve `TextOverflow.ellipsis` ile sarıldı; böylece uzun isimler dar ekranlarda sağdaki fiyat alanını sıkıştırmaz.
+  - Sağ tarafta `Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.end)` ile fiyat ve durum rozeti esnek olarak hizalandı. Kartın yüksekliği içeriğe göre esner, sabit kısıtlama olmadığı için sıfır piksel taşma sağlandı.
+  - **KPI Metrik Kartları:** `_buildMetricCard` içindeki metrik değerleri dar mobil cihazlarda (360px) taşma yapmaması için `FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft)` ile sarıldı.
+
+### 15.2 AppBar ve İçerik Hizalama Düzeltmeleri
+- **Sorunun Kök Nedeni:** `AdminShellScreen` zaten dışarıdan `RotivaAppBar` içeren bir ana `Scaffold`'a sahipti. Bununla birlikte `AdminDashboardTab`, `AdminRentalsTab` ve `AdminCustomersTab` kendi içlerinde ikinci bir `Scaffold` döndürüyordu (Nested Scaffold). Bu iç içe `Scaffold` yapısı, özellikle kaydırma sırasında üst AppBar altında gölgelenme, padding çakışması ve içerik gizlenme sorununa yol açıyordu.
+- **Uygulanan Çözüm:**
+  - Sekme bileşenlerindeki gereksiz iç `Scaffold` yapıları tamamen kaldırıldı; doğrudan `SafeArea(top: false, bottom: true)` ve `SingleChildScrollView` / `Column` mimarisi kullanıldı.
+  - `AdminShellScreen` AppBar başlığı sabit `'Yönetici Paneli'` metninden dinamik `_getTabTitle(_currentIndex)` fonksiyonuna bağlandı (`Özet Paneli`, `Araç Yönetimi`, `Kiralama Takibi`, `Müşteri Listesi`).
+  - `RotivaAppBar` ve `AppTheme` içerisindeki AppBar temasına `scrolledUnderElevation: 2.0` eklenerek scroll anında sayfa içeriği ile AppBar'ın görsel olarak çakışması engellendi.
+
+### 15.3 Diğer Ekranlardaki Responsive İyileştirmeler
+- **`VehicleCard`:** Araç kartındaki teknik özellik rozetlerinde (`minimumAge`, `minimumLicenseYears`, `dailyKmLimit`, `additionalDailyKm`) katı `Row` yerine `Wrap(spacing: 8, runSpacing: 6)` uygulandı; 320-360px mobil ekranlarda rozetlerin kart dışına taşması engellendi.
+- **`StatusBadge`:** Dikey iç boşluk `3.5` piksele, font boyutu `11.5` piksele optimize edildi; dar trailing ve kart alanlarında dikey baskı sıfırlandı.
+- **`VehicleDetailScreen`:** Araç detay özellikleri kartları `LayoutBuilder` ile sarıldı. Genişlik >340px ise 2 eşit sütun, <=340px ise tek sütun olarak esnetildi.
+- **`PaymentSimulationScreen`:** Ödeme özeti satırlarında (`_buildSummaryRow`) sol etiket metni `Expanded` ile sarılarak dar ekranlarda değer metniyle çakışma ihtimali ortadan kaldırıldı.
+
+### 15.4 Tüm Dart Kodlarına Kalıcı Türkçe Açıklama Standardı
+- SoftIto mobil eğitim hedefleri doğrultusunda `lib/` klasöründeki **45 Dart dosyasının tamamı** incelendi.
+- Başlangıç seviyesindeki bir öğrencinin VS Code üzerinde kodları satır satır okuyarak Flutter mimarisini öğrenebilmesi için:
+  - `import`, `class`, `enum`, `final`, `const`, `late`, `required`, `?` (nullable),
+  - `initState`, `dispose`, `setState`, `build`,
+  - `Scaffold`, `AppBar`, `Column`, `Row`, `Expanded`, `Wrap`, `CustomPainter`,
+  - `RotivaScope` (InheritedWidget), `AppRepository` (ChangeNotifier),
+  - Model sınıfları, JSON serileştirme (`toJson`/`fromJson`), `SharedPreferences` kalıcılığı,
+  - Fiyatlandırma motoru (`RentalPricing`), tarih çakışma formülleri ve form validatörleri
+  doğal, kısa ve eğitici Türkçe `//` açıklamaları ile belgelendi.
+
+### 15.5 Zorunlu Dokümantasyon Standardı
+- Projede herhangi bir kod veya layout değişikliği yapıldığında `yuzYuze/20ekim_odev/PROJECT.md` dosyasının da güncellenmesi zorunlu kılındı.
+- Bu kural kalıcı olarak `.agents/skills/SKILL.md` ve `.agents/skills/flutter-quality/SKILL.md` dosyalarına kaydedildi.

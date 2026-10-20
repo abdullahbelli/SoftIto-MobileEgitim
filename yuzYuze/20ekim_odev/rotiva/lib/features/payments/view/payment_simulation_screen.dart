@@ -1,5 +1,7 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, formatlayıcılar, ortak AppBar ve kapsam sağlayıcısını içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/rotiva_app_bar.dart';
@@ -14,16 +16,16 @@ import '../../vehicles/models/vehicle.dart';
 /// Kredi kartı, EFT/Havale ve Şubede Nakit ödeme yöntemlerini destekler.
 /// Adrese teslimde nakit ödemeyi kilitler; şubeden teslim + şubede nakitte %10 indirim uygular.
 class PaymentSimulationScreen extends StatefulWidget {
-  final Vehicle vehicle;
-  final DateTime startDate;
-  final DateTime endDate;
-  final int rentalDays;
-  final DeliveryType deliveryType;
-  final String? deliveryAddress;
-  final bool hasExtraKm;
-  final double basePrice;
-  final double extraKmCost;
-  final double deliveryFee;
+  final Vehicle vehicle; // Kiralanan araç nesnesi
+  final DateTime startDate; // Başlangıç tarihi
+  final DateTime endDate; // Bitiş tarihi
+  final int rentalDays; // Kiralama gün sayısı
+  final DeliveryType deliveryType; // Teslimat şekli
+  final String? deliveryAddress; // Adrese teslimat adresi
+  final bool hasExtraKm; // Ek kilometre paketi var mı?
+  final double basePrice; // Taban araç bedeli
+  final double extraKmCost; // Ek km maliyeti
+  final double deliveryFee; // Teslimat hizmet bedeli
 
   const PaymentSimulationScreen({
     super.key,
@@ -45,19 +47,24 @@ class PaymentSimulationScreen extends StatefulWidget {
 }
 
 class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
+  // Seçilen ödeme yöntemi (Varsayılan: Kredi Kartı)
   PaymentMethod _selectedMethod = PaymentMethod.creditCard;
+
+  // Mock Kredi Kartı Form Alan Denetleyicileri
   final _cardHolderController = TextEditingController(text: 'Ahmet Yılmaz');
   final _cardNumberController = TextEditingController(
     text: '4543 •••• •••• 9821',
   );
   final _expiryController = TextEditingController(text: '12/28');
   final _cvvController = TextEditingController(text: '342');
+
+  // Ödeme simülasyonu işlemde mi bayrağı
   bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
-    // Adrese teslimse varsayılan kredi kartı olmalı
+    // Adrese teslimat seçilmişse nakit ödeme kilitlenir, varsayılan kredi kartı atanır (PROJECT.md Madde 7)
     if (widget.deliveryType == DeliveryType.address &&
         _selectedMethod == PaymentMethod.cashAtBranch) {
       _selectedMethod = PaymentMethod.creditCard;
@@ -66,6 +73,7 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
 
   @override
   void dispose() {
+    // Controller nesnelerini bellekten temizliyoruz.
     _cardHolderController.dispose();
     _cardNumberController.dispose();
     _expiryController.dispose();
@@ -73,10 +81,11 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
     super.dispose();
   }
 
+  /// Ödemeyi ve rezervasyonu tamamlayan simülasyon fonksiyonu
   Future<void> _completePayment() async {
     setState(() => _isProcessing = true);
 
-    // Kısa gerçekçi simülasyon gecikmesi
+    // Kısa ve gerçekçi simülasyon bekleme süresi (600 ms)
     await Future.delayed(const Duration(milliseconds: 600));
 
     if (!mounted) return;
@@ -84,7 +93,7 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
     final repository = RotivaScope.of(context).repository;
     final currentUser = repository.currentUser;
 
-    // Fiyatlandırma hesaplaması
+    // Nihai fiyat hesaplamasını yapıyoruz.
     final pricing = RentalPricing.calculate(
       vehicle: widget.vehicle,
       startDate: widget.startDate,
@@ -94,11 +103,14 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
       paymentMethod: _selectedMethod,
     );
 
+    // 6 haneli benzersiz rezervasyon takip kodunu oluşturuyoruz (Örn: RTV-4821)
     final reservationCode = RotivaFormatters.generateReservationCode();
+    // Şubede nakit ise "Şubede Ödenecek", diğerlerinde "Simüle Ödendi" statüsü verilir.
     final paymentStatus = _selectedMethod == PaymentMethod.cashAtBranch
         ? PaymentStatus.payAtBranch
         : PaymentStatus.simulatedPaid;
 
+    // Yeni kiralama modelini inşa ediyoruz.
     final newRental = Rental(
       id: 'rent_${DateTime.now().millisecondsSinceEpoch}',
       reservationCode: reservationCode,
@@ -127,20 +139,22 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
       createdAt: DateTime.now(),
     );
 
+    // Rezervasyonu depoya kaydediyoruz.
     await repository.createRental(newRental);
 
     setState(() => _isProcessing = false);
 
-    // Başarı Diyaloğu
+    // Kullanıcıya başarı diyalog penceresini gösteriyoruz.
     if (mounted) {
       _showSuccessDialog(newRental);
     }
   }
 
+  /// Rezervasyon onaylandığında açılan başarı diyaloğu
   void _showSuccessDialog(Rental rental) {
     showDialog<void>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: false, // Kullanıcı dışarı tıklayarak kapatamaz.
       builder: (ctx) {
         return AlertDialog(
           icon: const Icon(Icons.check_circle, color: Colors.green, size: 54),
@@ -157,6 +171,7 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
                 style: const TextStyle(fontSize: 13),
               ),
               const SizedBox(height: 12),
+              // Rezervasyon Kodunu Vurgulayan Kutu
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -221,7 +236,7 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
             FilledButton(
               onPressed: () {
                 Navigator.of(ctx).pop();
-                // Kiralamalarım sekmesine yönlendir
+                // Kullanıcıyı Kiralamalarım (indeks 2) sekmesine yönlendiriyoruz.
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
                     builder: (_) =>
@@ -242,6 +257,7 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Dinamik fiyatlandırma hesaplaması
     final pricing = RentalPricing.calculate(
       vehicle: widget.vehicle,
       startDate: widget.startDate,
@@ -260,7 +276,7 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Simülasyon Bilgi Bandı
+            // Eğitim ve Simülasyon Bilgi Bandı
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -287,14 +303,14 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Ödeme Yöntemi Seçimi
+            // Ödeme Yöntemi Seçimi Başlığı
             const SectionHeader(
               title: 'Ödeme Yöntemi Seçiniz',
               padding: EdgeInsets.zero,
             ),
             const SizedBox(height: 8),
 
-            // 1. Kredi Kartı
+            // 1. Kredi Kartı Seçeneği
             RadioListTile<PaymentMethod>(
               value: PaymentMethod.creditCard,
               groupValue: _selectedMethod,
@@ -304,7 +320,7 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
               onChanged: (val) => setState(() => _selectedMethod = val!),
             ),
 
-            // 2. Havale / EFT
+            // 2. Havale / EFT Seçeneği
             RadioListTile<PaymentMethod>(
               value: PaymentMethod.bankTransfer,
               groupValue: _selectedMethod,
@@ -314,7 +330,7 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
               onChanged: (val) => setState(() => _selectedMethod = val!),
             ),
 
-            // 3. Şubede Nakit (Adrese teslimatta kapalı)
+            // 3. Şubede Nakit Seçeneği (Adrese teslimatta kilitlenir)
             RadioListTile<PaymentMethod>(
               value: PaymentMethod.cashAtBranch,
               groupValue: _selectedMethod,
@@ -354,7 +370,7 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
                   : const Text('Aracı teslim alırken şubede nakit ödeme'),
               secondary: const Icon(Icons.payments_outlined),
               onChanged: isAddressDelivery
-                  ? null // Adrese teslimde devre dışı
+                  ? null // Adrese teslimde devre dışı bırakılır.
                   : (val) => setState(() => _selectedMethod = val!),
             ),
             const SizedBox(height: 16),
@@ -499,7 +515,7 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
             ],
             const SizedBox(height: 20),
 
-            // Nihai Fiyat Dökümü
+            // Nihai Fiyat Dökümü Kartı
             Card(
               elevation: 1,
               child: Padding(
@@ -598,6 +614,7 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
     );
   }
 
+  /// Özet satırlarını oluşturan yardımcı metot (Taşmaları önlemek için label Expanded ile sarılmıştır)
   Widget _buildSummaryRow(
     String label,
     String value, {
@@ -606,14 +623,17 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            color: isDiscount ? Colors.green.shade800 : null,
-            fontWeight: isDiscount ? FontWeight.w600 : null,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: isDiscount ? Colors.green.shade800 : null,
+              fontWeight: isDiscount ? FontWeight.w600 : null,
+            ),
           ),
         ),
+        const SizedBox(width: 8),
         Text(
           value,
           style: TextStyle(

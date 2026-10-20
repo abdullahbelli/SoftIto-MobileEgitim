@@ -1,5 +1,7 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, tarih araçları, boş durum görünümü, ortak bileşenler ve araç modellerini içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../core/widgets/empty_state_view.dart';
@@ -10,8 +12,9 @@ import '../../vehicles/models/vehicle.dart';
 import '../../vehicles/view/vehicle_detail_screen.dart';
 
 /// Müşteri Ana Sayfası.
-/// Hızlı lokasyon ve tarih arama paneli ile öne çıkan/filtrelenen araçları listeler.
+/// Hızlı lokasyon ve tarih arama paneli ile öne çıkan ve filtrelenen araçları listeler.
 class HomeTabView extends StatefulWidget {
+  // Araçlar sekmesine yönlendirme sağlayan geri çağırım (callback) fonksiyonu
   final VoidCallback onNavigateToVehicles;
 
   const HomeTabView({super.key, required this.onNavigateToVehicles});
@@ -21,14 +24,16 @@ class HomeTabView extends StatefulWidget {
 }
 
 class _HomeTabViewState extends State<HomeTabView> {
+  // Kullanıcının filtrelediği il ve ilçe durum değişkenleri
   String? _selectedCity;
   String? _selectedDistrict;
+  // Seçilen kiralama tarih aralığı
   DateTimeRange? _selectedDateRange;
 
   @override
   void initState() {
     super.initState();
-    // Varsayılan olarak bugünden itibaren 2 günlük tarih önerisi
+    // Varsayılan olarak bugünden itibaren 2 günlük örnek tarih aralığı önerisi sunuyoruz.
     final now = DateTime.now();
     _selectedDateRange = DateTimeRange(
       start: RotivaDateUtils.dateOnly(now),
@@ -36,6 +41,7 @@ class _HomeTabViewState extends State<HomeTabView> {
     );
   }
 
+  /// Arama ve filtreleri başlangıç durumuna sıfırlayan metot
   void _resetSearch() {
     setState(() {
       _selectedCity = null;
@@ -48,6 +54,7 @@ class _HomeTabViewState extends State<HomeTabView> {
     });
   }
 
+  /// Tarih aralığı seçici (DateRangePicker) penceresini açan asenkron metot
   Future<void> _pickDateRange() async {
     final now = DateTime.now();
     final firstDate = RotivaDateUtils.dateOnly(now);
@@ -64,7 +71,7 @@ class _HomeTabViewState extends State<HomeTabView> {
     );
 
     if (picked != null) {
-      // Başlangıç ve bitiş aynı gün seçildiyse en az 1 gün ekle
+      // Başlangıç ve bitiş aynı gün seçildiyse en az 1 tam gün ekliyoruz.
       DateTime end = picked.end;
       if (end.difference(picked.start).inDays < 1) {
         end = picked.start.add(const Duration(days: 1));
@@ -75,7 +82,7 @@ class _HomeTabViewState extends State<HomeTabView> {
     }
   }
 
-  // Wrapper for showDateRangePicker
+  /// showDateRangePicker fonksiyonunu sarmalayan yardımcı metot
   Future<DateTimeRange?> showDateDateRangePicker({
     required BuildContext context,
     required DateTime firstDate,
@@ -102,14 +109,14 @@ class _HomeTabViewState extends State<HomeTabView> {
     final repository = RotivaScope.of(context).repository;
     final currentUser = repository.currentUser;
 
-    // Aktif araçları filtreleme
+    // Aktif araçları filtreleme kriterlerine göre süzüyoruz.
     final allActiveVehicles = repository.activeVehicles;
     final filteredVehicles = allActiveVehicles.where((v) {
-      // 1. Şehir filtresi
+      // 1. Şehir filtresi kontrolü
       if (_selectedCity != null && v.city != _selectedCity) {
         return false;
       }
-      // 2. İlçe filtresi
+      // 2. İlçe filtresi kontrolü
       if (_selectedDistrict != null && v.district != _selectedDistrict) {
         return false;
       }
@@ -126,13 +133,15 @@ class _HomeTabViewState extends State<HomeTabView> {
     }).toList();
 
     return Scaffold(
+      // Karşılama alt başlığı içeren ortak Rotiva AppBar
       appBar: RotivaAppBar(
         subtitleText:
             'Merhaba, ${currentUser?.fullName.split(' ').first ?? 'Misafir'}',
       ),
+      // Performanslı kaydırma için CustomScrollView ve Sliver mimarisi
       body: CustomScrollView(
         slivers: [
-          // Arama & Filtreleme Paneli
+          // Arama & Filtreleme Kartı Paneli
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -181,10 +190,10 @@ class _HomeTabViewState extends State<HomeTabView> {
                       ),
                       const SizedBox(height: 12),
 
-                      // İl ve İlçe Seçimi (İl değişince ilçe sıfırlanır)
+                      // İl ve İlçe Seçimi (İl değiştiğinde ilçe otomatik sıfırlanır)
                       Row(
                         children: [
-                          // İl Seçimi
+                          // İl Seçimi Açılır Menüsü
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               value: _selectedCity,
@@ -219,7 +228,7 @@ class _HomeTabViewState extends State<HomeTabView> {
                           ),
                           const SizedBox(width: 10),
 
-                          // İlçe Seçimi
+                          // İlçe Seçimi Açılır Menüsü
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               value: _selectedDistrict,
@@ -323,7 +332,7 @@ class _HomeTabViewState extends State<HomeTabView> {
             ),
           ),
 
-          // Sonuç Başlığı ve Sayısı
+          // Sonuç Başlığı ve Sayısı Bilgi Satırı
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -345,7 +354,7 @@ class _HomeTabViewState extends State<HomeTabView> {
             ),
           ),
 
-          // Araç Listesi veya Boş Durum
+          // Araç Listesi veya Sonuç Bulunamadı Boş Durumu
           if (filteredVehicles.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
@@ -384,6 +393,7 @@ class _HomeTabViewState extends State<HomeTabView> {
     );
   }
 
+  /// Seçili aracın detay sayfasına yönlendiren yardımcı metot
   void _openVehicleDetail(Vehicle vehicle) {
     Navigator.of(context).push(
       MaterialPageRoute(

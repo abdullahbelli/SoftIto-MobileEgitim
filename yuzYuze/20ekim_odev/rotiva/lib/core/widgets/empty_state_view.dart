@@ -1,12 +1,14 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Flutter Material Design arayüz bileşenleri.
 
-/// Liste boş olduğunda veya arama sonucu bulunamadığında gösterilen şık boş durum widget'ı.
+/// Liste boş olduğunda veya arama sonucu bulunamadığında gösterilen şık boş durum (Empty State) widget'ı.
 class EmptyStateView extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String message;
-  final String? buttonText;
-  final VoidCallback? onButtonPressed;
+  final IconData icon; // Ortada gösterilecek büyük simge
+  final String title; // Boş durum başlığı (Örn: "Uygun Araç Bulunamadı")
+  final String message; // Açıklayıcı ve yönlendirici alt metin
+  final String?
+  buttonText; // Opsiyonel aksiyon butonu yazısı (Örn: "Filtreleri Sıfırla")
+  final VoidCallback?
+  onButtonPressed; // Butona basıldığında tetiklenecek fonksiyon
 
   const EmptyStateView({
     super.key,
@@ -19,15 +21,17 @@ class EmptyStateView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme = Theme.of(context); // Aktif temayı alıyoruz.
 
     return Center(
+      // Küçük ekranlarda taşma olmaması için içeriği kaydırılabilir yapıyoruz.
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Yuvarlak arka planlı büyük ikon kutusu
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -37,6 +41,7 @@ class EmptyStateView extends StatelessWidget {
               child: Icon(icon, size: 54, color: theme.colorScheme.primary),
             ),
             const SizedBox(height: 20),
+            // Kalın ana başlık
             Text(
               title,
               textAlign: TextAlign.center,
@@ -45,6 +50,7 @@ class EmptyStateView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
+            // Açıklama metni
             Text(
               message,
               textAlign: TextAlign.center,
@@ -52,6 +58,7 @@ class EmptyStateView extends StatelessWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
+            // Eğer aksiyon butonu ve fonksiyonu tanımlanmışsa butonu gösteriyoruz
             if (buttonText != null && onButtonPressed != null) ...[
               const SizedBox(height: 20),
               FilledButton.tonal(

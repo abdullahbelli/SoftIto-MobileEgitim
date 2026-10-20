@@ -1,14 +1,18 @@
-/// Rotiva araç kiralama değerlendirme ve yorum modeli.
+/// Rotiva araç kiralama değerlendirme ve yorum veri modeli.
+/// Tamamlanan kiralamalar sonrasında müşterilerin verdiği 1-5 arası yıldız puanını ve yorum metnini saklar.
 class Review {
-  final String id;
-  final String rentalId;
-  final String vehicleId;
-  final String customerId;
-  final String customerName;
-  final int stars; // 1 ile 5 arası yıldız
-  final String comment;
-  final DateTime createdAt;
+  final String id; // Yorum kaydının benzersiz ID'si (Örn: rev_1)
+  final String rentalId; // Bu yorumun ait olduğu kiralama kaydının ID'si
+  final String vehicleId; // Yorum yapılan aracın ID'si
+  final String customerId; // Yorumu yazan müşterinin ID'si
+  final String customerName; // Yorumu yazan müşterinin adı ve soyadı
+  final int
+  stars; // 1 ile 5 arasında verilen değerlendirme puanı (yıldız sayısı)
+  final String
+  comment; // Müşterinin araç ve kiralama deneyimi hakkındaki yorum metni
+  final DateTime createdAt; // Yorumun yazıldığı tarih ve saat
 
+  // Değiştirilemez (immutable) const constructor
   const Review({
     required this.id,
     required this.rentalId,
@@ -20,6 +24,7 @@ class Review {
     required this.createdAt,
   });
 
+  /// Değiştirilmek istenen alanları kopyalayarak yeni bir Review örneği oluşturan copyWith metodu
   Review copyWith({
     String? id,
     String? rentalId,
@@ -42,6 +47,7 @@ class Review {
     );
   }
 
+  /// SharedPreferences kalıcılığı için modeli Map yapısına dönüştüren metot
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -55,6 +61,7 @@ class Review {
     };
   }
 
+  /// JSON verisinden Review nesnesi inşa eden fabrika kurucusu
   factory Review.fromJson(Map<String, dynamic> json) {
     return Review(
       id: json['id'] as String,
@@ -62,6 +69,7 @@ class Review {
       vehicleId: json['vehicleId'] as String,
       customerId: json['customerId'] as String,
       customerName: json['customerName'] as String? ?? 'Müşteri',
+      // Puanın mutlaka 1 ile 5 arasında kalmasını clamp ile garanti ediyoruz.
       stars: (json['stars'] as int).clamp(1, 5),
       comment: json['comment'] as String,
       createdAt: json['createdAt'] != null

@@ -1,5 +1,7 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, form doğrulayıcılar, ortak diyaloglar ve veri kapsamını içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/dialogs.dart';
@@ -8,7 +10,9 @@ import '../../../core/widgets/rotiva_scope.dart';
 import '../../vehicles/models/vehicle.dart';
 
 /// Yönetici araç ekleme ve düzenleme formu ekranı.
+/// Filoya yeni araç ekler veya mevcut aracın teknik ve fiyatlandırma özelliklerini günceller.
 class AdminVehicleFormScreen extends StatefulWidget {
+  // Düzenleme modunda gönderilen mevcut araç nesnesi (Yeni eklemede null gelir).
   final Vehicle? vehicle;
 
   const AdminVehicleFormScreen({super.key, this.vehicle});
@@ -18,27 +22,32 @@ class AdminVehicleFormScreen extends StatefulWidget {
 }
 
 class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
+  // Formun doğrulama durumunu takip etmek için GlobalKey tanımlıyoruz.
   final _formKey = GlobalKey<FormState>();
 
-  late TextEditingController _brandController;
-  late TextEditingController _modelController;
-  late TextEditingController _yearController;
-  late TextEditingController _dailyRateController;
-  late TextEditingController _hourlyRateController;
-  late TextEditingController _minAgeController;
-  late TextEditingController _minLicenseYearsController;
-  late TextEditingController _dailyKmLimitController;
-  late TextEditingController _additionalDailyKmController;
-  late TextEditingController _additionalKmPriceController;
-  late TextEditingController _addressDeliveryFeeController;
+  // Metin giriş alanlarının denetleyicileri (Controllers)
+  late TextEditingController _brandController; // Marka
+  late TextEditingController _modelController; // Model
+  late TextEditingController _yearController; // Yıl
+  late TextEditingController _dailyRateController; // Günlük ücret
+  late TextEditingController _hourlyRateController; // Saatlik ücret
+  late TextEditingController _minAgeController; // Minimum sürücü yaşı
+  late TextEditingController _minLicenseYearsController; // Minimum ehliyet yılı
+  late TextEditingController _dailyKmLimitController; // Günlük standart km
+  late TextEditingController _additionalDailyKmController; // Ek paket km
+  late TextEditingController _additionalKmPriceController; // Ek km ücreti
+  late TextEditingController
+  _addressDeliveryFeeController; // Adrese teslim ücreti
 
-  late VehicleCategory _category;
-  late FuelType _fuelType;
-  late TransmissionType _transmission;
-  late String _selectedCity;
-  late String _selectedDistrict;
-  late bool _isActive;
+  // Seçimli açılır kutu (Dropdown) durum alanları
+  late VehicleCategory _category; // Kategori (Sedan, SUV vb.)
+  late FuelType _fuelType; // Yakıt türü
+  late TransmissionType _transmission; // Vites türü
+  late String _selectedCity; // Şehir
+  late String _selectedDistrict; // İlçe
+  late bool _isActive; // Kiralamaya açık mı?
 
+  // Ekranın düzenleme modunda mı yoksa yeni ekleme modunda mı olduğunu anlatan yardımcı getter
   bool get isEditing => widget.vehicle != null;
 
   @override
@@ -46,6 +55,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
     super.initState();
     final v = widget.vehicle;
 
+    // Eğer düzenleme modundaysa mevcut değerlerle, yeni eklemeyse varsayılanlarla dolduruyoruz.
     _brandController = TextEditingController(text: v?.brand ?? '');
     _modelController = TextEditingController(text: v?.model ?? '');
     _yearController = TextEditingController(
@@ -86,6 +96,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
 
   @override
   void dispose() {
+    // Bellek sızıntılarını (memory leak) önlemek için tüm denetleyicileri dispose ediyoruz.
     _brandController.dispose();
     _modelController.dispose();
     _yearController.dispose();
@@ -100,11 +111,14 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
     super.dispose();
   }
 
+  /// Form verilerini kaydeden asenkron fonksiyon.
   Future<void> _handleSave() async {
+    // Tüm form alanlarının doğrulama (validation) kurallarından geçtiğini denetliyoruz.
     if (!_formKey.currentState!.validate()) return;
 
     final repository = RotivaScope.of(context).repository;
 
+    // Form alanlarından yeni/güncellenmiş Vehicle model nesnesini inşa ediyoruz.
     final vehicleData = Vehicle(
       id: widget.vehicle?.id ?? 'veh_${DateTime.now().millisecondsSinceEpoch}',
       brand: _brandController.text.trim(),
@@ -131,6 +145,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
       isActive: _isActive,
     );
 
+    // Düzenleme veya yeni ekleme işlemine göre repository metodunu çağırıyoruz.
     if (isEditing) {
       await repository.updateVehicle(vehicleData);
       if (mounted) {
@@ -151,6 +166,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
       }
     }
 
+    // İşlem bitince form sayfasını kapatıp listeye geri dönüyoruz.
     if (mounted) {
       Navigator.of(context).pop();
     }
@@ -158,12 +174,14 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Seçili ile ait ilçelerin listesini alıyoruz.
     final districts = AppConstants.turkeyCities[_selectedCity] ?? [];
 
     return Scaffold(
       appBar: RotivaAppBar(
         titleText: isEditing ? 'Aracı Düzenle' : 'Yeni Araç Ekle',
         actions: [
+          // AppBar üzerinde hızlı kaydet butonu
           FilledButton.tonal(
             onPressed: _handleSave,
             child: const Text('KAYDET'),
@@ -179,7 +197,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Marka ve Model
+              // Marka ve Model Giriş Satırı
               Row(
                 children: [
                   Expanded(
@@ -207,7 +225,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Yıl ve Kategori
+              // Yıl ve Kategori Seçim Satırı
               Row(
                 children: [
                   Expanded(
@@ -244,7 +262,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Yakıt ve Vites
+              // Yakıt ve Vites Türü Seçim Satırı
               Row(
                 children: [
                   Expanded(
@@ -286,7 +304,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Şehir ve İlçe
+              // Şehir ve İlçe Seçim Satırı (Şehir değiştiğinde ilçeler dinamik güncellenir)
               Row(
                 children: [
                   Expanded(
@@ -330,12 +348,13 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
               const Divider(),
               const SizedBox(height: 8),
 
-              // Ücretler
+              // Fiyatlandırma Ayarları Başlığı
               const Text(
                 'Fiyatlandırma Ayarları',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 12),
+              // Günlük ve Saatlik Ücretler
               Row(
                 children: [
                   Expanded(
@@ -374,6 +393,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
                 ],
               ),
               const SizedBox(height: 12),
+              // Adrese Teslimat ve Ek KM Ücretleri
               Row(
                 children: [
                   Expanded(
@@ -421,6 +441,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 12),
+              // Yaş ve Ehliyet Şartı
               Row(
                 children: [
                   Expanded(
@@ -455,6 +476,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
                 ],
               ),
               const SizedBox(height: 12),
+              // Standart KM ve Ek KM Paketi
               Row(
                 children: [
                   Expanded(
@@ -487,7 +509,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Aktiflik Durumu
+              // Araç Aktiflik Durumu Açma/Kapatma Anahtarı
               SwitchListTile(
                 title: const Text('Araç Kiralama İçin Aktif'),
                 subtitle: const Text(
@@ -498,7 +520,7 @@ class _AdminVehicleFormScreenState extends State<AdminVehicleFormScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Kaydet Butonu
+              // Büyük Kaydet Butonu
               SizedBox(
                 width: double.infinity,
                 height: 50,

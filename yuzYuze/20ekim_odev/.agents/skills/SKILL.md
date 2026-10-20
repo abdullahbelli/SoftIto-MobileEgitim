@@ -15,11 +15,13 @@ description: Rotiva Flutter eğitim projesi için kapsam, kod kalitesi ve uzman 
 - `flutter-design-system/SKILL.md`: Material 3, light/dark tema, renkler, bileşenler, uyumluluk ve logo.
 - `flutter-forms-auth/SKILL.md`: form, validator, kayıt/giriş, KVKK/açık rıza, diyalog.
 - `rental-business-rules/SKILL.md`: araç filtreleri, kiralama, uygunluk, fiyat, ödeme ve puanlar.
-- `flutter-quality/SKILL.md`: test, analiz, erişilebilirlik, hata/boş/yükleniyor durumları.
+- `flutter-quality/SKILL.md`: test, analiz, kalıcı Türkçe kod açıklama standardı, erişilebilirlik, hata/boş/yükleniyor durumları.
 
 ## Sabit çalışma kuralları
 - Yalnız `20ekim_odev/` içindeki kod/dosyalara müdahale et.
 - Flutter uygulaması `rotiva/` içindedir; dıştaki MD dosyalarını `lib` içine kopyalama.
+- **Kalıcı Türkçe Kod Açıklaması:** Bu proje SoftIto eğitimi kapsamında olduğundan tüm Dart kodlarında başlangıç seviyesindeki bir öğrencinin satır satır anlayabileceği kısa, doğal Türkçe `//` açıklamaları yer almalıdır.
+- **Zorunlu Dokümantasyon Güncellemesi:** Projede herhangi bir kod veya layout değişikliği yapıldığında `yuzYuze/20ekim_odev/PROJECT.md` dosyasının da güncellenmesi zorunludur.
 - Kod kolay anlaşılır olsun. Orta düzey karmaşıklık gerektiren çözüm yerine başlangıç seviyesinde temiz yaklaşımı seç.
 - Backend, gerçek ödeme, gerçek kimlik doğrulama ve uzak görsel zorunluluğu getirme.
 - İş kuralları ekran widget'larının içine gömülmesin; küçük controller / service / utility fonksiyonlarına ayrıştırılsın.
@@ -34,7 +36,8 @@ description: Rotiva Flutter eğitim projesi için kapsam, kod kalitesi ve uzman 
 3. Her feature'ı uçtan uca (form → işlem → liste güncellemesi) tamamla.
 4. Bir feature bitince `flutter analyze` ve ilgili testleri çalıştır; hataları gider.
 5. Sonunda `flutter test` ve mümkünse `flutter run -d chrome` ile doğrula.
-6. Türkçe raporda: oluşturulan/değişen dosyalar, nelerin çalıştığı, test sonucu, demo sınırları.
+6. Kod değişiklikleri yapıldığında `PROJECT.md` dosyasını senkronize et.
+7. Türkçe raporda: oluşturulan/değişen dosyalar, nelerin çalıştığı, test sonucu, demo sınırları.
 
 ## Tamamlanma standardı
-`PROJECT.md` bölüm 12 maddelerinin tümü karşılandığında tamamlanmış say. Sahte kart ödemesi açıkça **simülasyon** olarak etiketlenmeli. 
+`PROJECT.md` bölüm 12 maddelerinin tümü karşılandığında tamamlanmış say. Sahte kart ödemesi açıkça **simülasyon** olarak etiketlenmeli.

@@ -1,5 +1,7 @@
+// Flutter Material tasarım bileşenlerini içeri aktarıyoruz.
 import 'package:flutter/material.dart';
 
+// Sabitler, tarih araçları, formatlayıcılar, form doğrulayıcılar ve ortak diyalogları içeri aktarıyoruz.
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../core/utils/formatters.dart';
@@ -14,8 +16,9 @@ import '../../home/view/customer_shell_screen.dart';
 import '../../rentals/models/rental.dart';
 
 /// Müşteri Profil Sekmesi.
-/// Kullanıcı bilgileri, profil düzenleme, kiralama özeti, müşteri puanı, tema ve çıkış yönetimi.
+/// Kullanıcı bilgileri, profil düzenleme, kiralama özeti, müşteri puanı, tema ve çıkış yönetimi sağlar.
 class ProfileTabView extends StatefulWidget {
+  // Statik const constructor tanımlıyoruz.
   const ProfileTabView({super.key});
 
   @override
@@ -23,7 +26,7 @@ class ProfileTabView extends StatefulWidget {
 }
 
 class _ProfileTabViewState extends State<ProfileTabView> {
-  // İki harfli kullanıcı baş harfleri (Örn: Ahmet Yılmaz -> AY)
+  /// İki harfli kullanıcı baş harflerini oluşturan yardımcı metot (Örn: Ahmet Yılmaz -> AY)
   String _getInitials(String fullName) {
     if (fullName.trim().isEmpty) return 'R';
     final parts = fullName.trim().split(RegExp(r'\s+'));
@@ -33,7 +36,7 @@ class _ProfileTabViewState extends State<ProfileTabView> {
     return '${parts[0][0]}${parts[parts.length - 1][0]}'.toUpperCase();
   }
 
-  // Profil Bilgilerini Düzenleme (Ad, Soyad, E-posta, Telefon)
+  /// Profil Bilgilerini Düzenleme Diyaloğu (Ad, Soyad, E-posta, Telefon)
   void _editProfileInfo() async {
     final repository = RotivaScope.of(context).repository;
     final user = repository.currentUser;
@@ -155,7 +158,7 @@ class _ProfileTabViewState extends State<ProfileTabView> {
     phoneController.dispose();
   }
 
-  // Sürücü Belgelerini Güncelleme (Doğum Tarihi, Ehliyet Alış Tarihi)
+  /// Sürücü Belgelerini Güncelleme Diyaloğu (Doğum Tarihi, Ehliyet Alış Tarihi)
   void _editDriverInfo() async {
     final repository = RotivaScope.of(context).repository;
     final user = repository.currentUser;
@@ -265,7 +268,7 @@ class _ProfileTabViewState extends State<ProfileTabView> {
     );
   }
 
-  // Uygulama Hakkında Diyaloğu
+  /// Uygulama Hakkında Bilgilendirme Diyaloğu
   void _showAboutDialog(BuildContext context) {
     showDialog<void>(
       context: context,
@@ -327,7 +330,7 @@ class _ProfileTabViewState extends State<ProfileTabView> {
     );
   }
 
-  // Çıkış Yapma Metodu (Madde 3 Gereksinimleri)
+  /// Çıkış Yapma Metodu (PROJECT.md Madde 3 Gereksinimleri)
   Future<void> _handleLogout() async {
     final confirm = await RotivaDialogs.showConfirmationDialog(
       context: context,
@@ -341,7 +344,7 @@ class _ProfileTabViewState extends State<ProfileTabView> {
     if (confirm && mounted) {
       await RotivaScope.of(context).repository.logout();
       if (!mounted) return;
-      // Geri tuşuyla korumalı ekranlara dönülememesi için pushAndRemoveUntil kullanılır
+      // Geri tuşuyla korumalı ekranlara dönülememesi için pushAndRemoveUntil kullanılır.
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const WelcomeScreen()),
         (route) => false,
@@ -721,7 +724,7 @@ class _ProfileTabViewState extends State<ProfileTabView> {
                           icon: const Icon(Icons.receipt_long, size: 16),
                           label: const Text('Tüm Kiralamalarımı Gör'),
                           onPressed: () {
-                            // Kiralamalarım sekmesine geçiş
+                            // Kiralamalarım sekmesine programatik geçiş yapıyoruz.
                             final shellState = context
                                 .findAncestorStateOfType<
                                   CustomerShellScreenState
@@ -891,6 +894,7 @@ class _ProfileTabViewState extends State<ProfileTabView> {
     );
   }
 
+  /// Profildeki kiralama istatistik kutucuklarını oluşturan yardımcı metot
   Widget _buildRentalStatBox({
     required String title,
     int? count,
