@@ -1,66 +1,74 @@
-import 'dart:math';
+import 'dart:math'; // Matematiksel formüller (min, max, karekök) ve mesafe hesaplamaları için içe aktarır.
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Flutter geometri sınıfları (Rect, Offset, Color) için içe aktarır.
 
-/// Tuval nesnesi temel soyut sınıfı
+/// Tuval nesnesi temel soyut sınıfı (BoardObject)
+/// Tahta üzerindeki tüm elemanların (kalem çizimi, şekil, metin, post-it, görsel) ortak özelliklerini ve davranışlarını belirler.
 abstract class BoardObject {
-  final String id;
-  final String type;
-  final bool isPinned;
-  final int zIndex;
-  final String createdBy;
-  final DateTime createdAt;
+  final String id; // Nesnenin benzersiz kimlik numarası (UUID).
+  final String type; // Nesne türü ('stroke', 'rectangle', 'ellipse', 'line', 'arrow', 'text', 'sticky_note', 'image').
+  final bool isPinned; // Nesnenin panoda kilitli/sabitli olup olmadığını belirler (sabitliyse taşınamaz).
+  final int zIndex; // Katman sırası (derinlik); yüksek zIndex önde çizilir.
+  final String createdBy; // Nesneyi çizen/oluşturan kullanıcının kimliği.
+  final DateTime createdAt; // Nesnenin oluşturulma tarihi.
 
+  // Değişmez kurucu fonksiyon.
   const BoardObject({
     required this.id,
     required this.type,
-    this.isPinned = false,
+    this.isPinned = false, // Varsayılan olarak nesne kilitli değildir.
     this.zIndex = 0,
     required this.createdBy,
     required this.createdAt,
   });
 
-  /// Nesnenin dünya koordinatlarındaki sınır kutusu
+  /// Nesnenin dünya koordinatlarındaki çevreleyen sınır kutusunu (Rect) döndürür.
   Rect getBounds();
 
-  /// Verilen dünya koordinatındaki noktanın nesneye isabet edip etmediğini kontrol eder
+  /// Verilen dünya koordinatındaki noktanın (tıklama veya dokunma) nesneye isabet edip etmediğini kontrol eder.
+  /// [hitSlop]: Dokunma hassasiyeti payı (piksel cinsinden tolerans boşluğu).
   bool containsPoint(Offset point, {double hitSlop = 8.0});
 
-  /// Nesneyi dünya koordinatlarında delta kadar öteler
+  /// Nesneyi dünya koordinatlarında delta (dx, dy) kadar öteler (taşır).
   BoardObject movedBy(Offset delta);
 
-  /// Sabitleme durumunu değiştirir
+  /// Nesnenin sabitleme (isPinned) özelliğini güncelleyerek yeni kopyasını üretir.
   BoardObject withPinned(bool pinned);
 
+  /// Nesneyi JSON haritasına dönüştürür.
   Map<String, dynamic> toMap();
 
+  /// Polimorfik fabrika fonksiyonu: JSON tip alanına ('type') bakarak uygun somut nesneyi üretir.
   static BoardObject fromMap(Map<String, dynamic> map) {
     final type = map['type'] as String? ?? 'stroke';
     switch (type) {
       case 'stroke':
-        return StrokeObject.fromMap(map);
+        return StrokeObject.fromMap(map); // Serbest çizim
       case 'rectangle':
       case 'ellipse':
       case 'line':
       case 'arrow':
-        return ShapeObject.fromMap(map);
+        return ShapeObject.fromMap(map); // Geometrik şekiller
       case 'text':
-        return TextObject.fromMap(map);
+        return TextObject.fromMap(map); // Metin kutusu
       case 'sticky_note':
-        return StickyNoteObject.fromMap(map);
+        return StickyNoteObject.fromMap(map); // Post-it not
       case 'image':
-        return ImageObject.fromMap(map);
+        return ImageObject.fromMap(map); // Görsel
       default:
-        return StrokeObject.fromMap(map);
+        return StrokeObject.fromMap(
+          map,
+        ); // Bilinmeyen durumlarda varsayılan çizgi
     }
   }
 }
 
-/// Serbest çizim (Kalem) nesnesi
+/// Serbest çizim (Kalem / Fırça) nesnesi
+/// Kullanıcının parmağı veya faresiyle tuval üzerine çizdiği noktalar dizisini (points) saklar.
 class StrokeObject extends BoardObject {
-  final List<Offset> points;
-  final Color color;
-  final double strokeWidth;
+  final List<Offset> points; // Çizgiyi oluşturan sıralı koordinat noktaları.
+  final Color color; // Çizgi rengi.
+  final double strokeWidth; // Çizgi kalınlığı (piksel).
 
   const StrokeObject({
     required super.id,
@@ -74,20 +82,22 @@ class StrokeObject extends BoardObject {
     this.strokeWidth = 3.0,
   });
 
-  @override
+  @override // Çizginin etrafını saran en küçük dikdörtgeni hesaplar.
   Rect getBounds() {
-    if (points.isEmpty) return Rect.zero;
+    if (points.isEmpty) return Rect.zero; // Nokta yoksa sıfır boyut.
     double minX = points.first.dx;
     double maxX = points.first.dx;
     double minY = points.first.dy;
     double maxY = points.first.dy;
 
+    // Tüm noktaları gezerek minimum ve maksimum x-y değerlerini bulur.
     for (final p in points) {
       if (p.dx < minX) minX = p.dx;
       if (p.dx > maxX) maxX = p.dx;
       if (p.dy < minY) minY = p.dy;
       if (p.dy > maxY) maxY = p.dy;
     }
+    // Kalınlık payını da ekleyerek sınır dikdörtgeni (Rect) oluşturur.
     return Rect.fromLTRB(
       minX - strokeWidth,
       minY - strokeWidth,
@@ -96,36 +106,46 @@ class StrokeObject extends BoardObject {
     );
   }
 
-  @override
+  @override // Tıklanan noktanın serbest çizgi segmentlerinden herhangi birine yakın olup olmadığını belirler.
   bool containsPoint(Offset point, {double hitSlop = 8.0}) {
+    // Önce genel sınır kutusunu kontrol ederek gereksiz döngüyü önler (Bounding Box erken eleme optimizasyonu).
     final bounds = getBounds().inflate(hitSlop);
     if (!bounds.contains(point)) return false;
 
+    // Çizginin yarıçapı + dokunma toleransı.
     final threshold = (strokeWidth / 2) + hitSlop;
+    // Çizginin her iki ardışık noktası arasındaki doğru parçasına olan en kısa mesafeyi hesaplar.
     for (int i = 0; i < points.length - 1; i++) {
       final p1 = points[i];
       final p2 = points[i + 1];
       if (_distanceToSegment(point, p1, p2) <= threshold) {
-        return true;
+        return true; // Nokta çizgiye yeterince yakınsa isabet kabul edilir.
       }
     }
     return false;
   }
 
+  // Bir P noktasının V ve W noktaları arasındaki doğru parçasına olan en kısa Öklid mesafesini hesaplar.
   double _distanceToSegment(Offset p, Offset v, Offset w) {
-    final l2 = (v - w).distanceSquared;
-    if (l2 == 0) return (p - v).distance;
+    final l2 =
+        (v - w).distanceSquared; // İki nokta arasındaki mesafenin karesi.
+    if (l2 == 0)
+      return (p - v)
+          .distance; // Doğru parçası tek bir noktaysa doğrudan mesafe.
+    // İzdüşüm katsayısını [0, 1] aralığında sınırlandırır (vektörel skaler çarpım).
     final t = max(
       0.0,
       min(1.0, ((p - v).dx * (w - v).dx + (p - v).dy * (w - v).dy) / l2),
     );
-    final projection = v + (w - v) * t;
-    return (p - projection).distance;
+    final projection =
+        v + (w - v) * t; // Doğru üzerindeki en yakın izdüşüm noktası.
+    return (p - projection).distance; // İzdüşüm noktasına olan uzaklık.
   }
 
-  @override
+  @override // Çizgiyi taşıma fonksiyonu.
   StrokeObject movedBy(Offset delta) {
-    if (isPinned) return this;
+    if (isPinned) return this; // Kilitliyse taşınmaz.
+    // Her noktaya delta (kayma) miktarını ekler.
     final newPoints = points.map((p) => p + delta).toList();
     return StrokeObject(
       id: id,
@@ -140,7 +160,7 @@ class StrokeObject extends BoardObject {
     );
   }
 
-  @override
+  @override // Kilit durumunu güncelleyen kopyalama metodu.
   StrokeObject withPinned(bool pinned) {
     return StrokeObject(
       id: id,
@@ -155,7 +175,7 @@ class StrokeObject extends BoardObject {
     );
   }
 
-  @override
+  @override // Modeli JSON haritasına çevirir.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -164,12 +184,15 @@ class StrokeObject extends BoardObject {
       'zIndex': zIndex,
       'createdBy': createdBy,
       'createdAt': createdAt.toIso8601String(),
-      'color': color.toARGB32(),
+      'color': color.toARGB32(), // 32-bit ARGB tam sayı renk değeri.
       'strokeWidth': strokeWidth,
-      'points': points.map((p) => {'x': p.dx, 'y': p.dy}).toList(),
+      'points': points
+          .map((p) => {'x': p.dx, 'y': p.dy})
+          .toList(), // Noktalar dizisi.
     };
   }
 
+  // Haritadan serbest çizim nesnesi inşa eden fabrika metodu.
   factory StrokeObject.fromMap(Map<String, dynamic> map) {
     final pointsList = (map['points'] as List<dynamic>? ?? [])
         .map(
@@ -192,13 +215,13 @@ class StrokeObject extends BoardObject {
   }
 }
 
-/// Şekil (Dikdörtgen, Elips, Çizgi, Ok) nesnesi
+/// Geometrik Şekil (Dikdörtgen, Elips, Çizgi, Ok) nesnesi
 class ShapeObject extends BoardObject {
-  final Rect bounds;
-  final Color strokeColor;
-  final double strokeWidth;
-  final bool isFilled;
-  final Color? fillColor;
+  final Rect bounds; // Şeklin konum ve boyutunu belirten dikdörtgen.
+  final Color strokeColor; // Dış çizgi kontur rengi.
+  final double strokeWidth; // Kontur çizgi kalınlığı.
+  final bool isFilled; // Şeklin içinin boyalı olup olmadığı.
+  final Color? fillColor; // Şekil iç dolgu rengi (opsiyonel).
 
   const ShapeObject({
     required super.id,
@@ -214,11 +237,12 @@ class ShapeObject extends BoardObject {
     this.fillColor,
   });
 
-  @override
+  @override // Şeklin kapladığı sınır kutusunu döner.
   Rect getBounds() => bounds;
 
-  @override
+  @override // Şekle tıklanıp tıklanmadığını geometrisine göre hesaplar.
   bool containsPoint(Offset point, {double hitSlop = 8.0}) {
+    // Çizgi ve ok için doğru parçasına olan yakınlık formülü kullanılır:
     if (type == 'line' || type == 'arrow') {
       final p1 = bounds.topLeft;
       final p2 = bounds.bottomRight;
@@ -236,17 +260,21 @@ class ShapeObject extends BoardObject {
       return (point - projection).distance <= hitSlop + strokeWidth;
     }
 
-    final inflated = bounds.inflate(hitSlop);
+    // Dikdörtgen veya Elips için:
+    final inflated = bounds.inflate(
+      hitSlop,
+    ); // Dış sınırlara tolerans payı ekler.
     if (!inflated.contains(point)) return false;
 
+    // Eğer şeklin içi boyalıysa tüm iç alan tıklanabilir sayılır.
     if (isFilled) return true;
 
-    // Yalnızca kenarlara yakınsa seçilsin
+    // İçi boşsa sadece kenarlarına dokunulduğunda seçilsin diye iç kısmı hariç tutar.
     final inner = bounds.deflate(hitSlop + strokeWidth);
     return !inner.contains(point);
   }
 
-  @override
+  @override // Şekli delta kadar kaydırır.
   ShapeObject movedBy(Offset delta) {
     if (isPinned) return this;
     return ShapeObject(
@@ -256,7 +284,7 @@ class ShapeObject extends BoardObject {
       zIndex: zIndex,
       createdBy: createdBy,
       createdAt: createdAt,
-      bounds: bounds.shift(delta),
+      bounds: bounds.shift(delta), // Dikdörtgeni delta kadar öteler.
       strokeColor: strokeColor,
       strokeWidth: strokeWidth,
       isFilled: isFilled,
@@ -264,7 +292,7 @@ class ShapeObject extends BoardObject {
     );
   }
 
-  @override
+  @override // Sabitleme durumunu günceller.
   ShapeObject withPinned(bool pinned) {
     return ShapeObject(
       id: id,
@@ -281,7 +309,7 @@ class ShapeObject extends BoardObject {
     );
   }
 
-  @override
+  @override // JSON haritasına dönüştürür.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -301,6 +329,7 @@ class ShapeObject extends BoardObject {
     };
   }
 
+  // Haritadan ShapeObject nesnesi kurar.
   factory ShapeObject.fromMap(Map<String, dynamic> map) {
     final bounds = Rect.fromLTRB(
       (map['left'] as num).toDouble(),
@@ -327,14 +356,15 @@ class ShapeObject extends BoardObject {
   }
 }
 
-/// Metin nesnesi
+/// Metin nesnesi (TextObject)
+/// Tuvale serbestçe eklenen metin bloklarını temsil eder.
 class TextObject extends BoardObject {
-  final Offset position;
-  final String text;
-  final double fontSize;
-  final Color color;
-  final double width;
-  final double height;
+  final Offset position; // Metnin sol üst köşe konumu.
+  final String text; // Görüntülenecek yazı içeriği.
+  final double fontSize; // Yazı tipi boyutu.
+  final Color color; // Yazı rengi.
+  final double width; // Metin kutusu genişliği.
+  final double height; // Metin kutusu yüksekliği.
 
   const TextObject({
     required super.id,
@@ -351,17 +381,17 @@ class TextObject extends BoardObject {
     this.height = 60.0,
   });
 
-  @override
+  @override // Metin kutusunun sınırlarını döner.
   Rect getBounds() {
     return Rect.fromLTWH(position.dx, position.dy, width, height);
   }
 
-  @override
+  @override // Metin kutusunun içine tıklanıp tıklanmadığını denetler.
   bool containsPoint(Offset point, {double hitSlop = 8.0}) {
     return getBounds().inflate(hitSlop).contains(point);
   }
 
-  @override
+  @override // Metin kutusunu yeni konuma öteler.
   TextObject movedBy(Offset delta) {
     if (isPinned) return this;
     return TextObject(
@@ -380,7 +410,7 @@ class TextObject extends BoardObject {
     );
   }
 
-  @override
+  @override // Kilit durumunu günceller.
   TextObject withPinned(bool pinned) {
     return TextObject(
       id: id,
@@ -398,6 +428,7 @@ class TextObject extends BoardObject {
     );
   }
 
+  /// Metin içeriği düzenlendiğinde yeni metinli kopyasını üretir.
   TextObject copyWithText(String newText) {
     return TextObject(
       id: id,
@@ -415,7 +446,7 @@ class TextObject extends BoardObject {
     );
   }
 
-  @override
+  @override // JSON haritasına dönüştürür.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -434,6 +465,7 @@ class TextObject extends BoardObject {
     };
   }
 
+  // Haritadan TextObject nesnesi üretir.
   factory TextObject.fromMap(Map<String, dynamic> map) {
     return TextObject(
       id: map['id'] ?? '',
@@ -457,11 +489,12 @@ class TextObject extends BoardObject {
 }
 
 /// Post-it (Sticky Note) nesnesi
+/// Beyaz tahta üzerine renkli yapışkan notlar yapıştırmayı sağlar.
 class StickyNoteObject extends BoardObject {
-  final Rect bounds;
-  final String text;
-  final Color noteColor;
-  final String authorName;
+  final Rect bounds; // Not kağıdının konumu ve boyutları.
+  final String text; // Notun içerisindeki metin.
+  final Color noteColor; // Not kağıdının arka plan rengi (sarı, mavi vb.).
+  final String authorName; // Notu yazan kişinin adı.
 
   const StickyNoteObject({
     required super.id,
@@ -472,19 +505,21 @@ class StickyNoteObject extends BoardObject {
     required super.createdAt,
     required this.bounds,
     required this.text,
-    this.noteColor = const Color(0xFFFEF08A), // Varsayılan sarı post-it
+    this.noteColor = const Color(
+      0xFFFEF08A,
+    ), // Varsayılan sıcak sarı post-it rengi.
     this.authorName = 'Ali',
   });
 
-  @override
+  @override // Not kağıdının sınırlarını döner.
   Rect getBounds() => bounds;
 
-  @override
+  @override // Not kağıdına tıklanıp tıklanmadığını denetler.
   bool containsPoint(Offset point, {double hitSlop = 8.0}) {
     return bounds.inflate(hitSlop).contains(point);
   }
 
-  @override
+  @override // Not kağıdını taşır.
   StickyNoteObject movedBy(Offset delta) {
     if (isPinned) return this;
     return StickyNoteObject(
@@ -501,7 +536,7 @@ class StickyNoteObject extends BoardObject {
     );
   }
 
-  @override
+  @override // Sabitleme durumunu günceller.
   StickyNoteObject withPinned(bool pinned) {
     return StickyNoteObject(
       id: id,
@@ -517,6 +552,7 @@ class StickyNoteObject extends BoardObject {
     );
   }
 
+  /// Notun içeriğindeki metni güncelleyip yeni kopya döndürür.
   StickyNoteObject copyWithText(String newText) {
     return StickyNoteObject(
       id: id,
@@ -532,7 +568,7 @@ class StickyNoteObject extends BoardObject {
     );
   }
 
-  @override
+  @override // JSON haritasına dönüştürür.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -551,6 +587,7 @@ class StickyNoteObject extends BoardObject {
     };
   }
 
+  // Haritadan StickyNoteObject üretir.
   factory StickyNoteObject.fromMap(Map<String, dynamic> map) {
     final bounds = Rect.fromLTWH(
       (map['left'] as num).toDouble(),
@@ -575,11 +612,11 @@ class StickyNoteObject extends BoardObject {
   }
 }
 
-/// Görsel nesnesi
+/// Tuvale yüklenen Görsel / Resim nesnesi (ImageObject)
 class ImageObject extends BoardObject {
-  final Rect bounds;
-  final String imageUrl;
-  final String label;
+  final Rect bounds; // Görselin tuval üzerindeki konumu ve boyutları.
+  final String imageUrl; // Görselin dosya yolu veya web adresi.
+  final String label; // Görselin alt başlığı / etiketi.
 
   const ImageObject({
     required super.id,
@@ -593,15 +630,15 @@ class ImageObject extends BoardObject {
     this.label = 'Görsel',
   });
 
-  @override
+  @override // Görsel sınır kutusu.
   Rect getBounds() => bounds;
 
-  @override
+  @override // Görsele dokunulup dokunulmadığını denetler.
   bool containsPoint(Offset point, {double hitSlop = 8.0}) {
     return bounds.inflate(hitSlop).contains(point);
   }
 
-  @override
+  @override // Görseli taşır.
   ImageObject movedBy(Offset delta) {
     if (isPinned) return this;
     return ImageObject(
@@ -617,7 +654,7 @@ class ImageObject extends BoardObject {
     );
   }
 
-  @override
+  @override // Sabitleme durumunu günceller.
   ImageObject withPinned(bool pinned) {
     return ImageObject(
       id: id,
@@ -632,7 +669,7 @@ class ImageObject extends BoardObject {
     );
   }
 
-  @override
+  @override // JSON haritasına dönüştürür.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -650,6 +687,7 @@ class ImageObject extends BoardObject {
     };
   }
 
+  // Haritadan ImageObject nesnesi oluşturur.
   factory ImageObject.fromMap(Map<String, dynamic> map) {
     final bounds = Rect.fromLTWH(
       (map['left'] as num).toDouble(),

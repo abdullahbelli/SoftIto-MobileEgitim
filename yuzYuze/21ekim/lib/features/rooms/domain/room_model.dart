@@ -1,19 +1,24 @@
-import 'dart:convert';
+import 'dart:convert'; // JSON kodlama ve çözme işlemleri için standart kütüphaneyi içe aktarır.
 
 /// BoardConnect oda veri modeli
+/// Kullanıcıların oluşturduğu veya katıldığı ortak çalışma odalarını temsil eden değişmez (immutable) sınıftır.
 class RoomModel {
-  final String id;
-  final String name;
-  final String ownerId;
-  final String ownerName;
-  final String joinCode;
-  final String shareLink;
-  final int maxParticipants;
-  final int participantCount;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final bool isDeleted;
+  final String id; // Odanın benzersiz kimlik numarası (UUID).
+  final String
+  name; // Odanın adı/başlığı (Örn: "Sprint Planlama", "Tasarım Fikirleri").
+  final String ownerId; // Odayı oluşturan kullanıcının kimlik numarası.
+  final String ownerName; // Odayı oluşturan kullanıcının adı.
+  final String joinCode; // Katılımcıların odaya girmesi için üretilen 6-8 karakterlik kısa kod (Örn: "BC-A1B2").
+  final String shareLink; // Odaya doğrudan tarayıcıdan bağlanmak için üretilen paylaşım linki.
+  final int
+  maxParticipants; // Odaya aynı anda katılabilecek maksimum kişi sayısı.
+  final int participantCount; // Odada şu an aktif olan katılımcı sayısı.
+  final DateTime createdAt; // Odanın oluşturulma tarihi ve saati.
+  final DateTime
+  updatedAt; // Odanın veya tuvalin son güncellenme tarihi ve saati.
+  final bool isDeleted; // Odanın silinip silinmediğini belirten mantıksal bayrak (soft delete).
 
+  // Değişmez kurucu fonksiyon (Constructor).
   const RoomModel({
     required this.id,
     required this.name,
@@ -21,13 +26,14 @@ class RoomModel {
     required this.ownerName,
     required this.joinCode,
     required this.shareLink,
-    this.maxParticipants = 10,
-    this.participantCount = 1,
+    this.maxParticipants = 10, // Varsayılan maksimum 10 katılımcı.
+    this.participantCount = 1, // Başlangıçta odayı açan 1 kişi bulunur.
     required this.createdAt,
     required this.updatedAt,
-    this.isDeleted = false,
+    this.isDeleted = false, // Varsayılan olarak silinmemiş (aktif).
   });
 
+  /// Modeli yerel depolama veya veritabanı için harita (Map) yapısına dönüştürür.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -38,12 +44,14 @@ class RoomModel {
       'shareLink': shareLink,
       'maxParticipants': maxParticipants,
       'participantCount': participantCount,
-      'createdAt': createdAt.toIso8601String(),
+      'createdAt': createdAt
+          .toIso8601String(), // Tarihi ISO-8601 metnine çevirir.
       'updatedAt': updatedAt.toIso8601String(),
       'isDeleted': isDeleted,
     };
   }
 
+  /// Veritabanından veya yerel hafızadan gelen harita (Map) verisinden RoomModel üreten fabrika kurucusu.
   factory RoomModel.fromMap(Map<String, dynamic> map) {
     return RoomModel(
       id: map['id'] ?? '',
@@ -54,6 +62,7 @@ class RoomModel {
       shareLink: map['shareLink'] ?? '',
       maxParticipants: map['maxParticipants'] ?? 10,
       participantCount: map['participantCount'] ?? 1,
+      // Tarih metinlerini DateTime nesnesine dönüştürür; null ise mevcut anı atar.
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'])
           : DateTime.now(),
@@ -64,11 +73,14 @@ class RoomModel {
     );
   }
 
+  /// Odayı JSON dizesine dönüştürür.
   String toJson() => json.encode(toMap());
 
+  /// JSON dizesini çözümleyerek RoomModel nesnesi üretir.
   factory RoomModel.fromJson(String source) =>
       RoomModel.fromMap(json.decode(source));
 
+  /// Odanın belirli alanlarını değiştirip yeni bir nesne üretmek için kopyalama fonksiyonu.
   RoomModel copyWith({
     String? id,
     String? name,

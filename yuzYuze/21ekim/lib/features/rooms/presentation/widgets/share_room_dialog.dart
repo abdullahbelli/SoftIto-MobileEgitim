@@ -1,16 +1,20 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart'; // Flutter Material arayüz bileşenlerini içe aktarır.
+import 'package:flutter/services.dart'; // Panoya (Clipboard) metin kopyalamak için Flutter Services kütüphanesini içe aktarır.
 
-import '../../domain/room_model.dart';
+import '../../domain/room_model.dart'; // Oda veri modelini içe aktarır.
 
-/// Odayı Paylaşma ve Davet İletişim Penceresi
+/// Odayı Paylaşma ve Davet İletişim Penceresi (ShareRoomDialog)
+/// Kullanıcıların oda kodunu veya doğrudan bağlantı linkini kopyalayarak ekip arkadaşlarına iletmesini sağlar.
 class ShareRoomDialog extends StatelessWidget {
-  final RoomModel room;
+  final RoomModel room; // Paylaşılacak odaya ait bilgileri barındıran nesne.
 
   const ShareRoomDialog({super.key, required this.room});
 
+  /// Metni cihazın panosuna kopyalayan ve kullanıcıya onay SnackBar'ı gösteren yardımcı fonksiyon.
   void _copyToClipboard(BuildContext context, String text, String label) {
+    // Verilen metni işletim sistemi panosuna (clipboard) aktarır.
     Clipboard.setData(ClipboardData(text: text));
+    // Başarıyla kopyalandığını belirten 2 saniyelik yüzen bildirim gösterir.
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('$label panoya kopyalandı!'),
@@ -20,13 +24,16 @@ class ShareRoomDialog extends StatelessWidget {
     );
   }
 
-  @override
+  @override // Diyalog penceresi arayüzünü oluşturur.
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final theme = Theme.of(context); // Temayı okur.
+    final isDark = theme.brightness == Brightness.dark; // Koyu tema kontrolü.
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ), // Yuvarlak köşeli diyalog.
+      // Diyalog başlık satırı
       title: Row(
         children: [
           Icon(Icons.share_rounded, color: theme.colorScheme.primary),
@@ -40,14 +47,16 @@ class ShareRoomDialog extends StatelessWidget {
         ],
       ),
       content: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min, // İçeriği kadar yer kaplar.
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Oda adı
           Text(
             room.name,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 6),
+          // Bilgilendirici açıklama
           Text(
             'Arkadaşlarınızla aynı tuval üzerinde gerçek zamanlı çizim yapmak için bu bilgileri paylaşın.',
             style: TextStyle(
@@ -57,7 +66,7 @@ class ShareRoomDialog extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // Katılım Kodu Kutusu
+          // Katılım Kodu Kutusu (Büyük kod ve kopyalama butonu)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
@@ -80,7 +89,7 @@ class ShareRoomDialog extends StatelessWidget {
                       style: TextStyle(fontSize: 11, color: Colors.grey),
                     ),
                     Text(
-                      room.joinCode,
+                      room.joinCode, // Odanın kodu (Örn: "BC-DEMO").
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -90,6 +99,7 @@ class ShareRoomDialog extends StatelessWidget {
                     ),
                   ],
                 ),
+                // Kodu panoya kopyalayan buton
                 IconButton.filledTonal(
                   icon: const Icon(Icons.copy_rounded, size: 20),
                   onPressed: () =>
@@ -100,7 +110,7 @@ class ShareRoomDialog extends StatelessWidget {
           ),
           const SizedBox(height: 14),
 
-          // Paylaşım Bağlantısı Kutusu
+          // Paylaşım Bağlantısı Kutusu (Web linki ve kopyalama butonu)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
@@ -120,13 +130,14 @@ class ShareRoomDialog extends StatelessWidget {
                         style: TextStyle(fontSize: 11, color: Colors.grey),
                       ),
                       Text(
-                        room.shareLink,
+                        room.shareLink, // Odanın tam internet adresi.
                         style: const TextStyle(fontSize: 13),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
+                // Bağlantıyı kopyalama butonu
                 IconButton(
                   icon: const Icon(Icons.link_rounded),
                   onPressed: () => _copyToClipboard(
@@ -141,6 +152,7 @@ class ShareRoomDialog extends StatelessWidget {
         ],
       ),
       actions: [
+        // Diyaloğu kapatma butonu
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Kapat'),

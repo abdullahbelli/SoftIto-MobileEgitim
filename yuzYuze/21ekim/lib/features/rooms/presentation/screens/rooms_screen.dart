@@ -1,31 +1,35 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart'; // Flutter Material tasarım kütüphanesini içe aktarır.
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Riverpod durum yönetimi ConsumerStatefulWidget desteğini sağlar.
+import 'package:go_router/go_router.dart'; // Sayfa yönlendirme (context.go, context.push) kütüphanesini içe aktarır.
 
-import '../../../../app/theme/app_theme.dart';
-import '../../../../app/theme/theme_provider.dart';
-import '../../../../core/widgets/app_logo.dart';
-import '../../../auth/presentation/controllers/auth_controller.dart';
-import '../controllers/rooms_controller.dart';
-import '../widgets/create_room_sheet.dart';
-import '../widgets/join_room_sheet.dart';
-import '../widgets/room_card.dart';
+import '../../../../app/theme/app_theme.dart'; // Tema renk paletini içe aktarır.
+import '../../../../app/theme/theme_provider.dart'; // Tema modu ve renk sağlayıcılarını içe aktarır.
+import '../../../../core/widgets/app_logo.dart'; // BoardConnect logo bileşenini içe aktarır.
+import '../../../auth/presentation/controllers/auth_controller.dart'; // Kullanıcı oturum durumunu yöneten controller.
+import '../controllers/rooms_controller.dart'; // Odalar durum denetleyicisi.
+import '../widgets/create_room_sheet.dart'; // Oda oluşturma modal panel widget'ı.
+import '../widgets/join_room_sheet.dart'; // Odaya katılma modal panel widget'ı.
+import '../widgets/room_card.dart'; // Her bir odayı listeleyen kart widget'ı.
 
-/// Çalışmalar ve Odalar Ekranı (Rooms)
+/// Çalışmalar ve Odalar Ekranı (RoomsScreen)
+/// Kullanıcının tüm çalışma odalarını listelediği, arama yaptığı, yeni oda açtığı ve tuvale geçtiği ana merkezdir.
 class RoomsScreen extends ConsumerStatefulWidget {
   const RoomsScreen({super.key});
 
-  @override
+  @override // Widget durum nesnesini üretir.
   ConsumerState<RoomsScreen> createState() => _RoomsScreenState();
 }
 
+/// Odalar ekranının durum yönetimi sınıfı
 class _RoomsScreenState extends ConsumerState<RoomsScreen> {
-  String _searchQuery = '';
+  String _searchQuery = ''; // Arama çubuğuna yazılan filtreleme metni.
 
+  /// Yeni oda oluşturma alt sayfasını (Bottom Sheet) açan fonksiyon.
   void _openCreateRoom() {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
+      isScrollControlled:
+          true, // Klavyeyle birlikte tam yükseklik kontrolü sağlar.
       backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -34,6 +38,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
     );
   }
 
+  /// Odaya katılma alt sayfasını açan fonksiyon.
   void _openJoinRoom() {
     showModalBottomSheet(
       context: context,
@@ -46,6 +51,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
     );
   }
 
+  /// Kullanıcının uygulamanın sarı/turuncu/mavi vb. vurgu rengini seçebileceği renk paleti diyaloğunu açar.
   void _showColorPicker() {
     showDialog(
       context: context,
@@ -54,12 +60,15 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
         content: Wrap(
           spacing: 12,
           runSpacing: 12,
+          // AppTheme içindeki tüm hazır renk alternatiflerini yuvarlak butonlar olarak haritalar.
           children: AppTheme.accentColorOptions.map((color) {
+            // Seçili olan rengin aktifliğini denetler.
             final isSelected = ref.watch(accentColorProvider) == color;
             return InkWell(
               onTap: () {
+                // Seçilen yeni rengi Riverpod StateNotifier üzerinden kaydeder.
                 ref.read(accentColorProvider.notifier).setAccentColor(color);
-                Navigator.pop(ctx);
+                Navigator.pop(ctx); // Renk seçilince diyaloğu kapatır.
               },
               borderRadius: BorderRadius.circular(24),
               child: Container(
@@ -68,6 +77,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                 decoration: BoxDecoration(
                   color: color,
                   shape: BoxShape.circle,
+                  // Seçili renge beyaz çerçeve ve parıltı gölgesi ekler.
                   border: isSelected
                       ? Border.all(color: Colors.white, width: 3)
                       : null,
@@ -81,6 +91,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                         ]
                       : null,
                 ),
+                // Seçili olana onay (check) ikonu koyar.
                 child: isSelected
                     ? const Icon(Icons.check, color: Colors.black, size: 24)
                     : null,
@@ -98,19 +109,20 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
     );
   }
 
-  @override
+  @override // Arayüzü inşa eden metot.
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final theme = Theme.of(context); // Tema bilgilerini alır.
+    final isDark = theme.brightness == Brightness.dark; // Koyu mod kontrolü.
+    // Riverpod ile oturum açmış kullanıcı ve odalar listesini reaktif olarak izler.
     final userAsync = ref.watch(authControllerProvider);
     final roomsAsync = ref.watch(roomsControllerProvider);
-    final currentUser = userAsync.value;
+    final currentUser = userAsync.value; // Aktif kullanıcı modeli.
 
     return Scaffold(
       appBar: AppBar(
-        title: const AppLogo(size: 32),
+        title: const AppLogo(size: 32), // Logo başlığı.
         actions: [
-          // Vurgu Rengi Seçici
+          // Tema Vurgu Rengi Seçici Butonu
           IconButton(
             icon: Icon(
               Icons.palette_outlined,
@@ -120,7 +132,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
             onPressed: _showColorPicker,
           ),
 
-          // Açık / Koyu Tema Geçişi
+          // Açık / Koyu Tema Değiştirme Butonu (Güneş/Ay ikonu)
           IconButton(
             icon: Icon(
               isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
@@ -131,12 +143,13 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
             },
           ),
 
-          // Kullanıcı Profili & Çıkış
+          // Kullanıcı Profil Menüsü & Çıkış Yap Açılır Menüsü (PopupMenuButton)
           PopupMenuButton<String>(
             tooltip: 'Profil Seçenekleri',
             icon: CircleAvatar(
               radius: 16,
               backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+              // Kullanıcı adının ilk harfini profil resmi yerine gösterir.
               child: Text(
                 currentUser?.username.isNotEmpty == true
                     ? currentUser!.username[0].toUpperCase()
@@ -149,6 +162,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
               ),
             ),
             itemBuilder: (ctx) => [
+              // Kullanıcı adı ve e-posta bilgi satırı
               PopupMenuItem(
                 enabled: false,
                 child: Column(
@@ -168,7 +182,8 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                   ],
                 ),
               ),
-              const PopupMenuDivider(),
+              const PopupMenuDivider(), // Menü ayırıcı çizgisi.
+              // Çıkış Yap butonu
               PopupMenuItem(
                 value: 'logout',
                 child: const Row(
@@ -189,6 +204,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
             ],
             onSelected: (val) async {
               if (val == 'logout') {
+                // Oturumu kapatır ve giriş ekranına yönlendirir.
                 await ref.read(authControllerProvider.notifier).logout();
                 if (context.mounted) {
                   context.go('/login');
@@ -200,12 +216,14 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
         ],
       ),
       body: SafeArea(
+        // Aşağı kaydırarak yenileme (pull-to-refresh) mekanizması.
         child: RefreshIndicator(
           onRefresh: () =>
               ref.read(roomsControllerProvider.notifier).loadRooms(),
+          // Gelişmiş kaydırma ve sliver düzeni için CustomScrollView kullanılır.
           child: CustomScrollView(
             slivers: [
-              // Üst Karşılama ve Hızlı Butonlar
+              // Üst Karşılama Başlığı, Aksiyon Butonları ve Arama Çubuğu
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -242,7 +260,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                           ),
                           const SizedBox(width: 16),
 
-                          // Butonlar (Büyük ekranda yan yana)
+                          // Odaya Katıl ve Yeni Oda Oluştur butonları
                           Wrap(
                             spacing: 12,
                             runSpacing: 8,
@@ -263,7 +281,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Arama Alanı
+                      // Oda Arama Metin Alanı
                       TextField(
                         decoration: InputDecoration(
                           hintText: 'Oda adı veya kodu ile ara...',
@@ -277,6 +295,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                               ? const Color(0xFF1E293B)
                               : Colors.white,
                         ),
+                        // Kullanıcı arama kutusuna yazdıkça listeyi anında filtreler.
                         onChanged: (val) {
                           setState(() {
                             _searchQuery = val.trim().toLowerCase();
@@ -288,11 +307,13 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                 ),
               ),
 
-              // Odalar Grid / Liste
+              // Odalar Listesi / Izgara (Grid) Durum Yönetimi (AsyncValue.when)
               roomsAsync.when(
+                // Yüklenme durumu: Ortalanmış dairesel ilerleme çubuğu.
                 loading: () => const SliverFillRemaining(
                   child: Center(child: CircularProgressIndicator()),
                 ),
+                // Hata durumu: Hata mesajı ve Yeniden Dene butonu.
                 error: (e, _) => SliverFillRemaining(
                   child: Center(
                     child: Column(
@@ -316,13 +337,16 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                     ),
                   ),
                 ),
+                // Veri başarıyla geldiğinde çalışan bölüm:
                 data: (rooms) {
+                  // Arama terimine göre odayı filtreler (oda adı veya katılım koduna göre).
                   final filtered = rooms.where((r) {
                     if (_searchQuery.isEmpty) return true;
                     return r.name.toLowerCase().contains(_searchQuery) ||
                         r.joinCode.toLowerCase().contains(_searchQuery);
                   }).toList();
 
+                  // Filtreleme sonucu hiçbir oda yoksa boş durum ekranı (Empty state) gösterir.
                   if (filtered.isEmpty) {
                     return SliverFillRemaining(
                       child: Center(
@@ -361,6 +385,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                     );
                   }
 
+                  // Responsive (Duyarlı) Izgara Düzeni: Ekran genişliğine göre sütun sayısını ayarlar.
                   return SliverPadding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
@@ -368,20 +393,21 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                     ),
                     sliver: SliverLayoutBuilder(
                       builder: (context, constraints) {
-                        int crossAxisCount = 1;
+                        int crossAxisCount = 1; // Mobilde 1 sütun.
                         if (constraints.crossAxisExtent > 900) {
-                          crossAxisCount = 3;
+                          crossAxisCount = 3; // Geniş masaüstü ekranda 3 sütun.
                         } else if (constraints.crossAxisExtent > 600) {
-                          crossAxisCount = 2;
+                          crossAxisCount = 2; // Tablet ve orta ekranda 2 sütun.
                         }
 
+                        // SliverGrid ile odaları ızgara şeklinde çizer.
                         return SliverGrid(
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: crossAxisCount,
                                 crossAxisSpacing: 16,
                                 mainAxisSpacing: 16,
-                                mainAxisExtent: 165,
+                                mainAxisExtent: 165, // Kart sabit yüksekliği.
                               ),
                           delegate: SliverChildBuilderDelegate((
                             context,
@@ -391,12 +417,14 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                             return RoomCard(
                               room: room,
                               isOwner: true,
+                              // Odaya girildiğinde beyaz tahta ekranına yönlendirir.
                               onEnter: () {
                                 context.push(
                                   '/whiteboard/${room.id}',
                                   extra: {'roomName': room.name},
                                 );
                               },
+                              // Oda silindiğinde depodan siler ve SnackBar bildirimi gösterir.
                               onDelete: () async {
                                 await ref
                                     .read(roomsControllerProvider.notifier)
@@ -420,7 +448,9 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                   );
                 },
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 40)),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 40),
+              ), // Sayfa altı boşluğu.
             ],
           ),
         ),

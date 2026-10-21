@@ -1,49 +1,56 @@
 // ignore_for_file: prefer_initializing_formals
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
+import 'package:flutter/material.dart'; // Flutter Material arayüz ve grafik sınıflarını (Color, Offset, Rect) içe aktarır.
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Riverpod durum yönetimi StateNotifier yapısını içe aktarır.
+import 'package:uuid/uuid.dart'; // Yeni çizim nesnelerine benzersiz kimlikler üretmek için içe aktarır.
 
-import 'package:boardconnect/app/theme/theme_provider.dart';
-import 'package:boardconnect/core/config/app_constants.dart';
-import 'package:boardconnect/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:boardconnect/app/theme/theme_provider.dart'; // SharedPreferences sağlayıcısını içe aktarır.
+import 'package:boardconnect/core/config/app_constants.dart'; // Min/max zoom sınırlarını içe aktarır.
+import 'package:boardconnect/features/auth/presentation/controllers/auth_controller.dart'; // Oturum açmış aktif kullanıcıyı almak için içe aktarır.
 
-import '../../data/local_whiteboard_repository.dart';
-import '../../domain/board_object.dart';
-import '../../domain/canvas_theme.dart';
-import '../../domain/participant.dart';
-import '../../domain/whiteboard_repository.dart';
+import '../../data/local_whiteboard_repository.dart'; // Yerel tuval veri deposunu içe aktarır.
+import '../../domain/board_object.dart'; // Tuval nesnesi temel ve alt sınıflarını içe aktarır.
+import '../../domain/canvas_theme.dart'; // Tuval ızgara deseni enum türünü içe aktarır.
+import '../../domain/participant.dart'; // Katılımcı veri modelini içe aktarır.
+import '../../domain/whiteboard_repository.dart'; // Tuval veri deposu sözleşmesini içe aktarır.
 
-/// Beyaz Tahta Aktif Araçları
+/// Beyaz Tahta Aktif Araçları (WhiteboardTool)
+/// Kullanıcının araç çubuğundan seçebileceği tüm çizim ve etkileşim modları.
 enum WhiteboardTool {
-  select, // Seçim ve taşıma
-  pen, // Serbest çizim kalemi
-  eraser, // Silgi
-  shape, // Şekiller
-  text, // Metin
-  stickyNote, // Post-it not
-  image, // Görsel
-  pan, // Tuval kaydırma
+  select, // Nesneleri seçme, taşıma ve boyutlandırma modu (V kısayolu).
+  pen, // Serbest çizim kalemi modu (P kısayolu).
+  eraser, // Dokunulan nesneleri silme modu (E kısayolu).
+  shape, // Dikdörtgen, elips, çizgi ve ok çizme modu (R kısayolu).
+  text, // Serbest metin ekleme modu (T kısayolu).
+  stickyNote, // Renkli yapışkan not (post-it) ekleme modu (N kısayolu).
+  image, // Tuvale görsel yükleme modu (I kısayolu).
+  pan, // Çizim yapmadan tüm tuvali kaydırma modu (H kısayolu).
 }
 
-/// Beyaz Tahta Durum Modeli
+/// Beyaz Tahta Durum Modeli (WhiteboardState)
+/// Tuvalin tüm anlık verilerini (nesneler, kamera konumu, yakınlaştırma, aktif araç vb.) tutan değişmez durum sınıfıdır.
 class WhiteboardState {
-  final String roomId;
-  final bool isLoading;
-  final List<BoardObject> objects;
-  final Offset pan;
-  final double scale;
-  final WhiteboardTool activeTool;
-  final String activeShapeType; // 'rectangle', 'ellipse', 'line', 'arrow'
-  final Color activeColor;
-  final double activeStrokeWidth;
-  final CanvasBackgroundPattern pattern;
-  final String? selectedObjectId;
-  final BoardObject? currentDrawing;
-  final List<WhiteboardParticipant> participants;
-  final bool canUndo;
-  final bool canRedo;
+  final String roomId; // Tahtanın ait olduğu odanın kimlik numarası.
+  final bool
+  isLoading; // Nesnelerin yerel depodan okunma sürecini belirten bayrak.
+  final List<BoardObject> objects; // Tuvaldeki tüm nesnelerin listesi.
+  final Offset pan; // Kameranın dünya koordinatlarındaki kayma (ofset) miktarı.
+  final double scale; // Kameranın mevcut yakınlaştırma (zoom) ölçeği.
+  final WhiteboardTool activeTool; // O an seçili olan çizim/etkileşim aracı.
+  final String activeShapeType; // Şekil aracı aktifken çizilecek şeklin türü ('rectangle', 'ellipse', 'line', 'arrow').
+  final Color activeColor; // Çizimlerde ve şekillerde kullanılan birincil renk.
+  final double activeStrokeWidth; // Çizgi kalınlığı (piksel).
+  final CanvasBackgroundPattern
+  pattern; // Zemin ızgara deseni (düz, kareli, çizgili, noktalı).
+  final String?
+  selectedObjectId; // Kullanıcının o an seçtiği nesnenin kimliği (yoksa null).
+  final BoardObject? currentDrawing; // Kullanıcı parmağını basılı tutarken anlık çizilen geçici nesne.
+  final List<WhiteboardParticipant>
+  participants; // Odadaki diğer canlı katılımcıların listesi.
+  final bool canUndo; // Geri alınabilecek işlem var mı?
+  final bool canRedo; // İleri alınabilecek işlem var mı?
 
+  // Değişmez kurucu metot.
   const WhiteboardState({
     required this.roomId,
     this.isLoading = true,
@@ -62,6 +69,7 @@ class WhiteboardState {
     this.canRedo = false,
   });
 
+  /// O an seçili olan nesnenin kendisini döndüren kolaylık 'getter' fonksiyonu.
   BoardObject? get selectedObject {
     if (selectedObjectId == null) return null;
     try {
@@ -71,6 +79,7 @@ class WhiteboardState {
     }
   }
 
+  /// Mevcut durumun belirli alanlarını güncelleyerek yeni bir WhiteboardState nesnesi kopyalayan fonksiyon.
   WhiteboardState copyWith({
     String? roomId,
     bool? isLoading,
@@ -83,9 +92,10 @@ class WhiteboardState {
     double? activeStrokeWidth,
     CanvasBackgroundPattern? pattern,
     String? selectedObjectId,
-    bool clearSelectedObjectId = false,
+    bool clearSelectedObjectId = false, // Seçimi sıfırlamak için özel bayrak.
     BoardObject? currentDrawing,
-    bool clearCurrentDrawing = false,
+    bool clearCurrentDrawing =
+        false, // Aktif çizimi temizlemek için özel bayrak.
     List<WhiteboardParticipant>? participants,
     bool? canUndo,
     bool? canRedo,
@@ -114,26 +124,31 @@ class WhiteboardState {
   }
 }
 
-/// Repository Provider
+/// Repository Provider: Yerel tuval nesnesi deposunu Riverpod ağacına sunar.
 final whiteboardRepositoryProvider = Provider<WhiteboardRepository>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
   return LocalWhiteboardRepository(prefs);
 });
 
 /// Whiteboard Notifier / Controller
+/// Tuval üzerindeki tüm çizim, sürükleme, kamera hareketi, geri/ileri alma (Undo/Redo)
+/// ve dışa aktarma (SVG/PNG) iş mantığını yöneten merkezi sınıftır.
 class WhiteboardController extends StateNotifier<WhiteboardState> {
-  final WhiteboardRepository _repository;
-  final String _currentUserId;
-  final String _currentUserName;
-  final _uuid = const Uuid();
+  final WhiteboardRepository _repository; // Veri saklama deposu.
+  final String _currentUserId; // Odayı kullanan kullanıcının kimliği.
+  final String _currentUserName; // Odayı kullanan kullanıcının adı.
+  final _uuid = const Uuid(); // Benzersiz ID üreteci.
 
+  // Geri alma yığını: Geçmiş nesne listesi durumlarını saklar (Undo Stack).
   final List<List<BoardObject>> _undoStack = [];
+  // İleri alma yığını: Geri alınmış durumları saklar (Redo Stack).
   final List<List<BoardObject>> _redoStack = [];
 
-  // Çizim ve etkileşim geçici durumları
-  Offset? _dragStartWorld;
-  Offset? _lastDragWorld;
-  bool _isMovingObject = false;
+  // Çizim ve sürükleme esnasında kullanılan geçici dünya koordinatları.
+  Offset? _dragStartWorld; // Sürüklemenin başladığı dünya koordinatı.
+  Offset? _lastDragWorld; // Son fare hareketinin dünya koordinatı.
+  bool _isMovingObject =
+      false; // Seçili nesnenin taşınmakta olup olmadığını belirten bayrak.
 
   WhiteboardController({
     required WhiteboardRepository repository,
@@ -144,62 +159,74 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
        _currentUserId = currentUserId,
        _currentUserName = currentUserName,
        super(WhiteboardState(roomId: roomId)) {
-    loadObjects();
-    _initSimulatedParticipants();
+    loadObjects(); // Nesneleri depodan yükler.
+    _initSimulatedParticipants(); // Ortak çalışma hissi vermek için simüle edilmiş katılımcıları başlatır.
   }
 
+  // Ortak çalışma odasına örnek canlı katılımcılar ve imleç konumları ekler.
   void _initSimulatedParticipants() {
     final demoParticipants = [
       const WhiteboardParticipant(
         id: 'user_selin',
         name: 'Selin Yılmaz',
-        color: Color(0xFF06B6D4), // Cyan
+        color: Color(0xFF06B6D4), // Camgöbeği
         worldPosition: Offset(-120, -50),
       ),
       const WhiteboardParticipant(
         id: 'user_mert',
         name: 'Mert Kaya',
-        color: Color(0xFFF97316), // Orange
+        color: Color(0xFFF97316), // Turuncu
         worldPosition: Offset(180, -20),
       ),
       const WhiteboardParticipant(
         id: 'user_zeynep',
         name: 'Zeynep Ak',
-        color: Color(0xFFA855F7), // Purple
+        color: Color(0xFFA855F7), // Mor
         worldPosition: Offset(40, 120),
       ),
     ];
     state = state.copyWith(participants: demoParticipants);
   }
 
+  /// Odaya ait kayıtlı nesneleri yerel depodan asenkron olarak yükler.
   Future<void> loadObjects() async {
     state = state.copyWith(isLoading: true);
     final objects = await _repository.getObjects(state.roomId);
     state = state.copyWith(isLoading: false, objects: objects);
   }
 
+  /// Bir değişiklik yapılmadan hemen önce mevcut durumu geri alma (Undo) yığınına kaydeder.
   void _pushUndo() {
-    _undoStack.add(List.from(state.objects));
+    _undoStack.add(
+      List.from(state.objects),
+    ); // Mevcut listenin sığ kopyasını ekler.
     if (_undoStack.length > 30) {
-      _undoStack.removeAt(0);
+      _undoStack.removeAt(
+        0,
+      ); // Bellek taşmasını önlemek için en fazla 30 adım saklar.
     }
-    _redoStack.clear();
+    _redoStack
+        .clear(); // Yeni bir işlem yapıldığında ileri alma yığını sıfırlanır.
     state = state.copyWith(canUndo: true, canRedo: false);
   }
 
+  /// Son yapılan işlemi geri alan fonksiyon (Undo)
   void undo() {
-    if (_undoStack.isEmpty) return;
-    _redoStack.add(List.from(state.objects));
-    final prev = _undoStack.removeLast();
+    if (_undoStack.isEmpty) return; // Geri alınacak işlem yoksa çık.
+    _redoStack.add(
+      List.from(state.objects),
+    ); // Mevcut durumu ileri alma yığınına atar.
+    final prev = _undoStack.removeLast(); // Son geçmiş durumu çeker.
     state = state.copyWith(
       objects: prev,
       canUndo: _undoStack.isNotEmpty,
       canRedo: true,
       clearSelectedObjectId: true,
     );
-    _repository.saveObjects(state.roomId, prev);
+    _repository.saveObjects(state.roomId, prev); // Geri alınan durumu kaydeder.
   }
 
+  /// Geri alınmış işlemi tekrar ileri alan fonksiyon (Redo)
   void redo() {
     if (_redoStack.isEmpty) return;
     _undoStack.add(List.from(state.objects));
@@ -213,27 +240,39 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     _repository.saveObjects(state.roomId, next);
   }
 
-  // Koordinat Dönüşümleri
+  // Koordinat Dönüşümleri (Matematik Motoru):
+  /// Ekrandaki piksel koordinatını (farenin/parmağın dokunduğu yer) tuvalin dünya koordinatına dönüştürür.
   Offset screenToWorld(Offset screenPoint) {
     return (screenPoint - state.pan) / state.scale;
   }
 
+  /// Tuval dünya koordinatını cihaz ekranındaki piksel konumuna dönüştürür.
   Offset worldToScreen(Offset worldPoint) {
     return worldPoint * state.scale + state.pan;
   }
 
-  // Kamera Pan & Zoom
+  // Kamera Pan & Zoom Metotları:
+  /// Tuvali parmak veya el aracıyla delta kadar serbestçe kaydırır.
   void updatePan(Offset delta) {
     state = state.copyWith(pan: state.pan + delta);
   }
 
+  /// İki parmakla kıstırma (pinch-to-zoom) veya fare tekerleğiyle odak noktasına göre yakınlaştırma yapar.
+  /// Odak noktası (focalPoint) sabit kalarak yakınlaştırma yapılır (kullanıcı deneyimi standardı).
   void updateZoom(double newScale, Offset focalPoint) {
-    final clamped = newScale.clamp(AppConstants.minZoom, AppConstants.maxZoom);
-    final worldFocal = (focalPoint - state.pan) / state.scale;
-    final newPan = focalPoint - worldFocal * clamped;
+    final clamped = newScale.clamp(
+      AppConstants.minZoom,
+      AppConstants.maxZoom,
+    ); // Zoom sınırlarına hapseder.
+    final worldFocal =
+        (focalPoint - state.pan) /
+        state.scale; // Odak noktasının dünya koordinatını bulur.
+    final newPan =
+        focalPoint - worldFocal * clamped; // Yeni pan miktarını hesaplar.
     state = state.copyWith(scale: clamped, pan: newPan);
   }
 
+  /// Yakınlaştırma oranını %25 artırır.
   void zoomIn() {
     final target = (state.scale * 1.25).clamp(
       AppConstants.minZoom,
@@ -242,6 +281,7 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     state = state.copyWith(scale: target);
   }
 
+  /// Yakınlaştırma oranını %25 azaltır.
   void zoomOut() {
     final target = (state.scale / 1.25).clamp(
       AppConstants.minZoom,
@@ -250,11 +290,13 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     state = state.copyWith(scale: target);
   }
 
+  /// Kamerayı başlangıç noktasına (pan: (0,0) ve scale: 1.0) sıfırlar.
   void resetCamera() {
     state = state.copyWith(pan: Offset.zero, scale: 1.0);
   }
 
-  // Araç ve Tema Ayarları
+  // Araç ve Tema Ayarları:
+  /// Aktif aracı değiştirir (seçim harici bir araca geçilirse seçili nesneyi bırakır).
   void setActiveTool(WhiteboardTool tool) {
     state = state.copyWith(
       activeTool: tool,
@@ -262,6 +304,7 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     );
   }
 
+  /// Çizilecek aktif şekil tipini ('rectangle', 'ellipse', 'line', 'arrow') ayarlar.
   void setActiveShapeType(String shapeType) {
     state = state.copyWith(
       activeTool: WhiteboardTool.shape,
@@ -269,27 +312,33 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     );
   }
 
+  /// Çizim rengini değiştirir.
   void setActiveColor(Color color) {
     state = state.copyWith(activeColor: color);
   }
 
+  /// Çizgi kalınlığını günceller.
   void setActiveStrokeWidth(double width) {
     state = state.copyWith(activeStrokeWidth: width);
   }
 
+  /// Tuval arka plan ızgara desenini ayarlar.
   void setPattern(CanvasBackgroundPattern pattern) {
     state = state.copyWith(pattern: pattern);
   }
 
-  // Pointer / Çizim Olayları
+  // Pointer / Dokunma ve Çizim Olayları:
+  /// Kullanıcı ekrana dokunduğunda veya fareye tıkladığında (onPointerDown) çalışan metot.
   void onPointerDown(Offset screenPoint) {
-    final worldPoint = screenToWorld(screenPoint);
-    _dragStartWorld = worldPoint;
+    final worldPoint = screenToWorld(
+      screenPoint,
+    ); // Ekran noktasını dünya koordinatına çevirir.
+    _dragStartWorld = worldPoint; // Başlangıç noktasını kaydeder.
     _lastDragWorld = worldPoint;
 
     switch (state.activeTool) {
       case WhiteboardTool.select:
-        // En üstteki nesneden başlayarak tıklandı mı bak
+        // En üstte (önde) çizilmiş nesneden başlayarak dokunulan nesneyi arar.
         BoardObject? hitObject;
         for (final obj in state.objects.reversed) {
           if (obj.containsPoint(worldPoint)) {
@@ -299,15 +348,21 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
         }
 
         if (hitObject != null) {
-          state = state.copyWith(selectedObjectId: hitObject.id);
-          _isMovingObject = !hitObject.isPinned;
+          state = state.copyWith(
+            selectedObjectId: hitObject.id,
+          ); // Nesneyi seçili yapar.
+          _isMovingObject = !hitObject
+              .isPinned; // Nesne kilitli değilse taşınabilir işaretler.
         } else {
-          state = state.copyWith(clearSelectedObjectId: true);
+          state = state.copyWith(
+            clearSelectedObjectId: true,
+          ); // Boşluğa tıklandıysa seçimi kaldırır.
           _isMovingObject = false;
         }
         break;
 
       case WhiteboardTool.pen:
+        // Kalem ile ilk noktayı içeren yeni bir serbest çizim nesnesi başlatır.
         final stroke = StrokeObject(
           id: 'stroke_${_uuid.v4().substring(0, 8)}',
           createdBy: _currentUserId,
@@ -320,10 +375,12 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
         break;
 
       case WhiteboardTool.eraser:
+        // Dokunulan yerdeki nesneyi anında siler.
         _eraseAt(worldPoint);
         break;
 
       case WhiteboardTool.shape:
+        // Yeni bir geometrik şekil çizimini başlatır (başlangıç ve bitiş noktası aynıdır).
         final shape = ShapeObject(
           id: 'shape_${_uuid.v4().substring(0, 8)}',
           type: state.activeShapeType,
@@ -344,11 +401,13 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     }
   }
 
+  /// Kullanıcı parmağını/faresini hareket ettirdiğinde (onPointerMove) çalışan metot.
   void onPointerMove(Offset screenPoint, {Offset? screenDelta}) {
-    final worldPoint = screenToWorld(screenPoint);
+    final worldPoint = screenToWorld(screenPoint); // Güncel dünya konumu.
 
     switch (state.activeTool) {
       case WhiteboardTool.select:
+        // Seçili nesne taşınıyorsa yeni koordinatına öteler.
         if (_isMovingObject &&
             state.selectedObjectId != null &&
             _lastDragWorld != null) {
@@ -364,6 +423,7 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
         break;
 
       case WhiteboardTool.pen:
+        // Kalem çizimine yeni noktayı ekler ve geçici çizimi günceller.
         if (state.currentDrawing is StrokeObject) {
           final current = state.currentDrawing as StrokeObject;
           final newPoints = List<Offset>.from(current.points)..add(worldPoint);
@@ -380,10 +440,13 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
         break;
 
       case WhiteboardTool.eraser:
-        _eraseAt(worldPoint);
+        _eraseAt(
+          worldPoint,
+        ); // Silgiyi sürüklerken temas edilen nesneleri siler.
         break;
 
       case WhiteboardTool.shape:
+        // Şeklin sınır dikdörtgenini başlangıç noktasından güncel noktaya kadar genişletir.
         if (state.currentDrawing is ShapeObject && _dragStartWorld != null) {
           final current = state.currentDrawing as ShapeObject;
           final updatedBounds = Rect.fromPoints(_dragStartWorld!, worldPoint);
@@ -404,7 +467,7 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
 
       case WhiteboardTool.pan:
         if (screenDelta != null) {
-          updatePan(screenDelta);
+          updatePan(screenDelta); // Tuvali sürükleme yönünde kaydırır.
         }
         break;
 
@@ -414,36 +477,43 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
         break;
     }
 
-    _lastDragWorld = worldPoint;
+    _lastDragWorld = worldPoint; // Son konumu günceller.
   }
 
+  /// Kullanıcı parmağını ekrandan kaldırdığında (onPointerUp) çalışan metot.
   void onPointerUp() {
+    // Çizilmekte olan bir nesne varsa kalıcı listeye aktarır ve hafızaya kaydeder.
     if (state.currentDrawing != null) {
-      _pushUndo();
+      _pushUndo(); // Geri alma yığınına ekler.
       final updated = List<BoardObject>.from(state.objects)
         ..add(state.currentDrawing!);
       state = state.copyWith(objects: updated, clearCurrentDrawing: true);
-      _repository.saveObjects(state.roomId, updated);
+      _repository.saveObjects(state.roomId, updated); // Diske kalıcı kaydeder.
     } else if (_isMovingObject) {
+      // Nesne taşıma bittiyse son pozisyonu kaydeder.
       _pushUndo();
       _repository.saveObjects(state.roomId, state.objects);
     }
 
+    // Geçici değişkenleri sıfırlar.
     _isMovingObject = false;
     _dragStartWorld = null;
     _lastDragWorld = null;
   }
 
+  // Belirtilen koordinattaki nesneleri silen yardımcı metot.
   void _eraseAt(Offset worldPoint) {
     final toRemove = <BoardObject>[];
     for (final obj in state.objects) {
       if (obj.containsPoint(worldPoint, hitSlop: 12.0)) {
-        toRemove.add(obj);
+        toRemove.add(
+          obj,
+        ); // 12 piksel toleransla isabet edenleri listeye ekler.
       }
     }
 
     if (toRemove.isNotEmpty) {
-      _pushUndo();
+      _pushUndo(); // Silmeden önce durumu yedekler.
       final updated = state.objects
           .where((o) => !toRemove.contains(o))
           .toList();
@@ -453,11 +523,15 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
           (o) => o.id == state.selectedObjectId,
         ),
       );
-      _repository.saveObjects(state.roomId, updated);
+      _repository.saveObjects(
+        state.roomId,
+        updated,
+      ); // Güncel listeyi kaydeder.
     }
   }
 
-  // Nesne Aksiyonları (Sabitleme & Silme)
+  // Nesne Aksiyonları (Sabitleme & Silme & Metin Güncelleme):
+  /// Seçili nesneyi siler.
   void deleteSelectedObject() {
     if (state.selectedObjectId == null) return;
     _pushUndo();
@@ -468,6 +542,7 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     _repository.saveObjects(state.roomId, updated);
   }
 
+  /// Seçili nesnenin raptiye (sabitleme) durumunu açar veya kapatır.
   void togglePinSelectedObject() {
     if (state.selectedObjectId == null) return;
     _pushUndo();
@@ -481,6 +556,7 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     _repository.saveObjects(state.roomId, updated);
   }
 
+  /// Post-it veya Metin nesnesinin metin içeriğini günceller.
   void updateObjectText(String objectId, String newText) {
     _pushUndo();
     final updated = state.objects.map((o) {
@@ -497,6 +573,7 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     _repository.saveObjects(state.roomId, updated);
   }
 
+  /// Tuvale yeni bir Post-it notu ekler.
   void addStickyNote(Offset worldPos, String text, Color color) {
     _pushUndo();
     final note = StickyNoteObject(
@@ -517,6 +594,7 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     _repository.saveObjects(state.roomId, updated);
   }
 
+  /// Tuvale yeni bağımsız metin ekler.
   void addText(Offset worldPos, String text) {
     _pushUndo();
     final textObj = TextObject(
@@ -539,6 +617,7 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     _repository.saveObjects(state.roomId, updated);
   }
 
+  /// Tuvale görsel yer tutucu kutusu ekler.
   void addImage(Offset worldPos, String label) {
     _pushUndo();
     final img = ImageObject(
@@ -559,6 +638,7 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     _repository.saveObjects(state.roomId, updated);
   }
 
+  /// Tuvaldeki tüm nesneleri temizler/sıfırlar.
   void clearCanvas() {
     _pushUndo();
     state = state.copyWith(
@@ -569,24 +649,28 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     _repository.clearObjects(state.roomId);
   }
 
-  // SVG Serileştirici (Dışa Aktarma)
+  // SVG Serileştirici (Dışa Aktarma):
+  /// Tuvaldeki tüm nesneleri vektörel W3C SVG XML metnine dönüştüren dışa aktarma fonksiyonu.
   String exportSvg() {
     if (state.objects.isEmpty) {
       return '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"></svg>';
     }
 
-    // Tüm nesnelerin kapladığı sınır kutusunu bul
+    // 1. Adım: Tüm nesnelerin kapladığı ortak sınır kutusunu (Bounding Box) hesaplar.
     Rect totalBounds = state.objects.first.getBounds();
     for (final obj in state.objects) {
       totalBounds = totalBounds.expandToInclude(obj.getBounds());
     }
-    totalBounds = totalBounds.inflate(40); // Kenar boşluğu
+    totalBounds = totalBounds.inflate(
+      40,
+    ); // Çevreye 40 piksel estetik boşluk payı ekler.
 
     final minX = totalBounds.left;
     final minY = totalBounds.top;
     final width = totalBounds.width;
     final height = totalBounds.height;
 
+    // 2. Adım: SVG metnini StringBuffer ile birleştirir.
     final buffer = StringBuffer();
     buffer.writeln(
       '<svg xmlns="http://www.w3.org/2000/svg" '
@@ -595,6 +679,7 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     );
     buffer.writeln('  <!-- BoardConnect Whiteboard Export -->');
     buffer.writeln('  <defs>');
+    // Ok uçları için tekrar kullanılabilir marker tanımlar.
     buffer.writeln(
       '    <marker id="arrowhead" markerWidth="10" markerHeight="7" '
       'refX="9" refY="3.5" orient="auto">'
@@ -603,6 +688,7 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     );
     buffer.writeln('  </defs>');
 
+    // 3. Adım: Her bir nesneyi kendi SVG XML etiketine dönüştürür.
     for (final obj in state.objects) {
       if (obj is StrokeObject) {
         if (obj.points.length > 1) {
@@ -684,10 +770,12 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
     return buffer.toString();
   }
 
+  // Flutter Color nesnesini 6 haneli '#RRGGBB' hex formatına çeviren yardımcı metot.
   String _colorToHex(Color color) {
     return '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
   }
 
+  // XML içinde bozulmaya yol açabilecek karakterleri (&, <, >, ", ') kaçış dizilerine dönüştüren metot.
   String _escapeXml(String input) {
     return input
         .replaceAll('&', '&amp;')
@@ -698,7 +786,8 @@ class WhiteboardController extends StateNotifier<WhiteboardState> {
   }
 }
 
-/// Aile bazlı Whiteboard Provider (oda ID'sine göre)
+/// Aile bazlı Whiteboard Provider (oda ID'sine göre her oda için bağımsız controller örneği üretir)
+/// 'autoDispose' oda kapatıldığında belleği otomatik olarak serbest bırakır.
 final whiteboardControllerProvider = StateNotifierProvider.autoDispose
     .family<WhiteboardController, WhiteboardState, String>((ref, roomId) {
       final repo = ref.watch(whiteboardRepositoryProvider);

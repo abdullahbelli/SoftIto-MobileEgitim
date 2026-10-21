@@ -1,17 +1,26 @@
-import 'room_model.dart';
+import 'room_model.dart'; // Oda veri modelini içe aktarır.
 
-/// Odalar için soyut repository arayüzü
+/// Odalar için soyut repository arayüzü (Interface)
+/// Bu arayüz, odaların listelenmesi, aranması, oluşturulması ve silinmesi işlemlerinin sözleşmesini tanımlar.
+/// Somut sınıf (LocalRoomRepository veya SupabaseRoomRepository) bu sözleşmeyi uygulayarak veriye erişir.
 abstract class RoomRepository {
-  /// Odaların listesini getirir
+  /// Sistemdeki aktif ve silinmemiş odaların listesini asenkron olarak getirir.
   Future<List<RoomModel>> getRooms();
 
-  /// ID ile odayı getirir
+  /// Benzersiz oda kimliğine (ID) göre odayı sorgular.
+  /// Bulunamazsa null döndürür.
   Future<RoomModel?> getRoomById(String id);
 
-  /// Katılım kodu ile odayı getirir
+  /// Katılımcının girdiği kısa katılım koduna (Örn: "BC-1234") göre odayı sorgular.
+  /// Bulunamazsa null döndürür.
   Future<RoomModel?> getRoomByCode(String code);
 
-  /// Yeni oda oluşturur
+  /// Yeni bir çalışma odası oluşturur ve odaya ait benzersiz ID, kod ve bağlantı üretir.
+  /// [name]: Oda adı
+  /// [maxParticipants]: Maksimum katılımcı kapasitesi
+  /// [ownerId]: Odayı oluşturan kullanıcının kimliği
+  /// [ownerName]: Odayı oluşturan kullanıcının adı
+  /// Oluşturulan [RoomModel] nesnesini döndürür.
   Future<RoomModel> createRoom({
     required String name,
     required int maxParticipants,
@@ -19,9 +28,11 @@ abstract class RoomRepository {
     required String ownerName,
   });
 
-  /// Odayı siler (yalnızca sahibi)
+  /// Belirtilen kimliğe sahip odayı sistemden siler (veya silindi olarak işaretler).
+  /// [roomId]: Silinecek odanın benzersiz kimliği.
   Future<void> deleteRoom(String roomId);
 
-  /// Odayı günceller
+  /// Oda bilgilerini (ad, katılımcı sayısı vb.) günceller.
+  /// [room]: Güncel bilgileri içeren oda modeli.
   Future<void> updateRoom(RoomModel room);
 }

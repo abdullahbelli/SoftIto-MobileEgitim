@@ -1,23 +1,30 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Flutter Material renk (Color) ve koordinat (Offset) sınıflarını içe aktarır.
 
-/// Tuvaldeki katılımcı modeli
+/// Tuvaldeki katılımcı modeli (WhiteboardParticipant)
+/// Gerçek zamanlı ortak çalışmada odada bulunan kullanıcıları, imleç/çizim pozisyonlarını ve ayırt edici renklerini temsil eder.
 class WhiteboardParticipant {
-  final String id;
-  final String name;
-  final Color color;
-  final Offset worldPosition;
-  final bool isActive;
-  final String? avatarUrl;
+  final String id; // Katılımcının benzersiz kullanıcı kimliği.
+  final String name; // Katılımcının ekranda görünecek ismi.
+  final Color
+  color; // Kullanıcının imleç ve çizimlerini ayırt etmeye yarayan özel renk.
+  final Offset worldPosition; // Kullanıcının imlecinin veya farenin tuval dünya koordinatlarındaki (x, y) konumu.
+  final bool isActive; // Kullanıcının odada aktif (çevrim içi) olup olmadığını belirten bayrak.
+  final String? avatarUrl; // Katılımcının profil fotoğrafı URL'i (varsa).
 
+  // Değişmez kurucu fonksiyon.
   const WhiteboardParticipant({
     required this.id,
     required this.name,
     required this.color,
-    this.worldPosition = const Offset(0, 0),
-    this.isActive = true,
+    this.worldPosition = const Offset(
+      0,
+      0,
+    ), // Varsayılan başlangıç konumu (0, 0).
+    this.isActive = true, // Varsayılan olarak aktif.
     this.avatarUrl,
   });
 
+  /// Katılımcının konum veya durum değişimlerinde yeni bir kopya oluşturmasını sağlayan fonksiyon.
   WhiteboardParticipant copyWith({
     String? id,
     String? name,
@@ -36,15 +43,15 @@ class WhiteboardParticipant {
     );
   }
 
-  // Katılımcılara atanacak ayırt edici renk paleti
+  // Odaya yeni giren katılımcılara sırayla atanacak canlı ve ayırt edici renk paleti.
   static const List<Color> participantColors = [
-    Color(0xFF06B6D4), // Cyan
-    Color(0xFF10B981), // Emerald
-    Color(0xFFF97316), // Orange
-    Color(0xFFF59E0B), // Amber
-    Color(0xFFA855F7), // Purple
-    Color(0xFFEC4899), // Pink
-    Color(0xFF3B82F6), // Blue
-    Color(0xFF14B8A6), // Teal
+    Color(0xFF06B6D4), // Camgöbeği (Cyan)
+    Color(0xFF10B981), // Zümrüt Yeşili (Emerald)
+    Color(0xFFF97316), // Sıcak Turuncu (Orange)
+    Color(0xFFF59E0B), // Amber Sarısı (Amber)
+    Color(0xFFA855F7), // Mor (Purple)
+    Color(0xFFEC4899), // Pembe (Pink)
+    Color(0xFF3B82F6), // Okyanus Mavisi (Blue)
+    Color(0xFF14B8A6), // Deniz Yeşili (Teal)
   ];
 }

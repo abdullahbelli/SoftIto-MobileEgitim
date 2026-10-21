@@ -1,13 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart'; // Flutter Material Design kütüphanesini içe aktarır.
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Riverpod durum yönetimi ConsumerStatefulWidget desteğini sağlar.
+import 'package:go_router/go_router.dart'; // Sayfa yönlendirme (context.go) kütüphanesini içe aktarır.
 
-import '../../../../core/widgets/app_logo.dart';
-import '../controllers/auth_controller.dart';
+import '../../../../core/widgets/app_logo.dart'; // BoardConnect logosu bileşeni.
+import '../controllers/auth_controller.dart'; // Kimlik doğrulama denetleyicisi.
 
 /// Yeni Şifre Oluşturma Ekranı
+/// Kullanıcı doğrulama kodunu girdikten sonra yeni şifresini ve şifre tekrarını bu ekranda belirler.
 class ResetPasswordScreen extends ConsumerStatefulWidget {
+  // Şifresi sıfırlanacak hedef e-posta adresi.
   final String email;
+  // Önceki sayfada başarıyla doğrulanan 6 haneli OTP kodu.
   final String code;
 
   const ResetPasswordScreen({
@@ -16,30 +19,37 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
     required this.code,
   });
 
-  @override
+  @override // Ekran durum sınıfını üretir.
   ConsumerState<ResetPasswordScreen> createState() =>
       _ResetPasswordScreenState();
 }
 
+/// Yeni şifre ekranının durum yönetimi sınıfı
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _isLoading = false;
+  final _formKey = GlobalKey<FormState>(); // Form doğrulama anahtarı.
+  final _passwordController =
+      TextEditingController(); // Yeni şifre metin denetleyicisi.
+  final _confirmPasswordController =
+      TextEditingController(); // Yeni şifre tekrarı metin denetleyicisi.
+  bool _obscurePassword =
+      true; // Şifrenin gizli mi açık mı olduğunu takip eder.
+  bool _isLoading = false; // İşlem sürerken çark gösteren yükleme bayrağı.
 
-  @override
+  @override // Ekrandan çıkıldığında denetleyicileri serbest bırakır.
   void dispose() {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
+  /// Şifreyi Onayla butonuna basıldığında çalışan şifre sıfırlama fonksiyonu
   Future<void> _handleReset() async {
+    // Şifre uzunluğu ve şifrelerin eşleşmesi kurallarını denetler.
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() => _isLoading = true); // Yüklenme durumunu başlatır.
     try {
+      // AuthController üzerinden yeni şifreyi kaydeder.
       await ref
           .read(authControllerProvider.notifier)
           .resetPassword(
@@ -49,6 +59,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           );
 
       if (mounted) {
+        // Başarı mesajı gösterir.
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -58,6 +69,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             behavior: SnackBarBehavior.floating,
           ),
         );
+        // Kullanıcıyı yeni şifresiyle giriş yapabilmesi için doğrudan giriş sayfasına yönlendirir.
         context.go('/login');
       }
     } catch (e) {
@@ -71,15 +83,15 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isLoading = false); // Yüklenme durumunu kapatır.
       }
     }
   }
 
-  @override
+  @override // Ekran arayüzünü oluşturur.
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final theme = Theme.of(context); // Temayı okur.
+    final isDark = theme.brightness == Brightness.dark; // Koyu mod kontrolü.
 
     return Scaffold(
       appBar: AppBar(title: const AppLogo(size: 30), centerTitle: true),
@@ -88,7 +100,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
+              constraints: const BoxConstraints(
+                maxWidth: 440,
+              ), // Kart genişliğini sınırlar.
               child: Card(
                 elevation: isDark ? 2 : 0,
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -106,11 +120,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     vertical: 40,
                   ),
                   child: Form(
-                    key: _formKey,
+                    key: _formKey, // Form doğrulama anahtarını bağlar.
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        // Anahtar ikonu yuvarlak kutusu
                         Container(
                           width: 56,
                           height: 56,
@@ -128,6 +143,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         ),
                         const SizedBox(height: 20),
 
+                        // Başlık
                         Text(
                           'Yeni Şifre Belirleyin',
                           style: theme.textTheme.headlineSmall?.copyWith(
@@ -137,6 +153,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         ),
                         const SizedBox(height: 8),
 
+                        // Açıklama
                         Text(
                           'Hesabınız için güçlü ve benzersiz yeni bir şifre girin.',
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -146,10 +163,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         ),
                         const SizedBox(height: 28),
 
-                        // Yeni Şifre
+                        // Yeni Şifre Giriş Alanı
                         TextFormField(
                           controller: _passwordController,
-                          obscureText: _obscurePassword,
+                          obscureText: _obscurePassword, // Şifreyi maskele.
                           decoration: InputDecoration(
                             labelText: 'Yeni Şifre',
                             prefixIcon: const Icon(Icons.lock_outline_rounded),
@@ -178,7 +195,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Yeni Şifre Tekrar
+                        // Yeni Şifre Tekrar Giriş Alanı
                         TextFormField(
                           controller: _confirmPasswordController,
                           obscureText: _obscurePassword,
@@ -186,6 +203,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                             labelText: 'Yeni Şifre (Tekrar)',
                             prefixIcon: Icon(Icons.lock_clock_outlined),
                           ),
+                          // İki şifrenin birbirini tutup tutmadığını kontrol eden doğrulayıcı.
                           validator: (val) {
                             if (val != _passwordController.text) {
                               return 'Girdiğiniz şifreler eşleşmiyor.';
@@ -195,7 +213,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Şifre yönergeleri
+                        // Şifre kuralları bilgilendirme kutucuğu
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
@@ -233,6 +251,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         ),
                         const SizedBox(height: 24),
 
+                        // Şifreyi Onayla Butonu
                         ElevatedButton(
                           onPressed: _isLoading ? null : _handleReset,
                           child: _isLoading

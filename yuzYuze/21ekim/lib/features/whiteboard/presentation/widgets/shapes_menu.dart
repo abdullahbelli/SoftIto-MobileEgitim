@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Flutter Material tasarım kütüphanesini içe aktarır.
 
-/// Şekil seçim açılır menüsü
+/// Şekil seçim açılır menüsü (ShapesMenu)
+/// Araç çubuğundaki Şekiller butonuna basıldığında açılan ve Dikdörtgen, Daire/Elips, Çizgi ve Ok arasından seçim yaptıran mini menüdür.
 class ShapesMenu extends StatelessWidget {
-  final String activeShapeType;
-  final ValueChanged<String> onShapeSelected;
+  final String activeShapeType; // O an seçili olan şeklin kimliği ('rectangle', 'ellipse', 'line', 'arrow').
+  final ValueChanged<String> onShapeSelected; // Kullanıcı yeni bir şekil seçtiğinde tetiklenen geri çağırma (callback) fonksiyonu.
 
   const ShapesMenu({
     super.key,
@@ -11,6 +12,7 @@ class ShapesMenu extends StatelessWidget {
     required this.onShapeSelected,
   });
 
+  // Menüde listelenecek şekil tanımları (ID, Türkçe etiket ve simge).
   static const List<Map<String, dynamic>> shapes = [
     {
       'id': 'rectangle',
@@ -22,19 +24,20 @@ class ShapesMenu extends StatelessWidget {
     {'id': 'arrow', 'label': 'Yön Oku', 'icon': Icons.arrow_right_alt_rounded},
   ];
 
-  @override
+  @override // Menü kartı arayüzünü oluşturur.
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final theme = Theme.of(context); // Temayı alır.
+    final isDark = theme.brightness == Brightness.dark; // Koyu mod kontrolü.
 
     return Container(
-      width: 180,
+      width: 180, // Menü genişliği.
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
         boxShadow: [
+          // Menünün altındaki derinlik gölgesi.
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 12,
@@ -43,18 +46,24 @@ class ShapesMenu extends StatelessWidget {
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min, // İçeriği kadar dikey yer kaplar.
+        // Her şekil seçeneğini tıklanabilir bir satır (InkWell) olarak listeler.
         children: shapes.map((shape) {
+          // Bu satırdaki şeklin aktif şekil olup olmadığını kontrol eder.
           final isSelected = activeShapeType == shape['id'];
           return InkWell(
-            onTap: () => onShapeSelected(shape['id']),
+            onTap: () => onShapeSelected(
+              shape['id'],
+            ), // Tıklanınca seçilen şekil ID'sini bildirir.
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              // Seçili satırın arka planını vurgu renginde hafifçe boyar.
               color: isSelected
                   ? theme.colorScheme.primary.withValues(alpha: 0.15)
                   : Colors.transparent,
               child: Row(
                 children: [
+                  // Şekil ikonu
                   Icon(
                     shape['icon'] as IconData,
                     size: 20,
@@ -63,6 +72,7 @@ class ShapesMenu extends StatelessWidget {
                         : (isDark ? Colors.white70 : Colors.black87),
                   ),
                   const SizedBox(width: 12),
+                  // Şekil adı metni
                   Text(
                     shape['label'] as String,
                     style: TextStyle(
@@ -75,7 +85,8 @@ class ShapesMenu extends StatelessWidget {
                           : (isDark ? Colors.white : Colors.black87),
                     ),
                   ),
-                  const Spacer(),
+                  const Spacer(), // Onay ikonunu en sağa iter.
+                  // Seçili ise en sağda beliren onay (checkmark) ikonu
                   if (isSelected)
                     Icon(
                       Icons.check_rounded,

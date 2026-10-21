@@ -1,13 +1,16 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Flutter Material tasarım bileşenlerini içe aktarır.
 
-import '../controllers/whiteboard_controller.dart';
-import '../../domain/board_object.dart';
-import 'text_edit_dialog.dart';
+import '../../domain/board_object.dart'; // Tuval nesnesi modellerini içe aktarır.
+import '../controllers/whiteboard_controller.dart'; // Tuval durumu ve controller sınıflarını içe aktarır.
+import 'text_edit_dialog.dart'; // Metin düzenleme diyalog penceresini içe aktarır.
 
-/// Seçili nesnenin sağ üst köşesinde görünen aksiyon kontrolleri
+/// Seçili nesnenin sağ üst köşesinde yüzen aksiyon kontrolleri (ObjectActionOverlay)
+/// Tuvalde bir nesne seçildiğinde üzerinde beliren raptiye (sabitleme), düzenleme ve silme butonlarını barındırır.
 class ObjectActionOverlay extends StatelessWidget {
-  final WhiteboardState state;
-  final WhiteboardController controller;
+  final WhiteboardState
+  state; // Tuvalin anlık durumu (seçili nesne bilgisi vb.).
+  final WhiteboardController
+  controller; // Aksiyonları tetikleyecek tuval denetleyicisi.
 
   const ObjectActionOverlay({
     super.key,
@@ -15,30 +18,36 @@ class ObjectActionOverlay extends StatelessWidget {
     required this.controller,
   });
 
-  @override
+  @override // Arayüzü inşa eder.
   Widget build(BuildContext context) {
+    // Tuvalde o an seçilmiş nesneyi alır.
     final selectedObj = state.selectedObject;
+    // Eğer hiçbir nesne seçili değilse ekrana hiçbir şey çizmez (boş kutu).
     if (selectedObj == null) return const SizedBox.shrink();
 
+    // Seçili nesnenin tuval dünya koordinatlarındaki sınırlarını okur.
     final worldBounds = selectedObj.getBounds();
-    // Sağ üst köşenin ekran koordinatını hesapla
+    // Sağ üst köşe noktasını tuval dünya koordinatından ekran piksel koordinatına çevirir.
     final screenTopRight = controller.worldToScreen(worldBounds.topRight);
 
-    // Ekran dışına taşmaması için sınırla
+    // Menünün ekranın dışına taşmasını engellemek için koordinatları ekran sınırlarına kelepçeler (clamp).
     final screenSize = MediaQuery.of(context).size;
     final posX = (screenTopRight.dx + 8).clamp(8.0, screenSize.width - 160.0);
     final posY = (screenTopRight.dy - 48).clamp(80.0, screenSize.height - 80.0);
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isPinned = selectedObj.isPinned;
+    final isDark =
+        Theme.of(context).brightness == Brightness.dark; // Koyu mod kontrolü.
+    final isPinned = selectedObj.isPinned; // Nesne kilitli mi?
+    // Nesnenin metni düzenlenebilir bir tipte (Post-it veya Metin) olup olmadığını kontrol eder.
     final isTextEditable =
         selectedObj is StickyNoteObject || selectedObj is TextObject;
 
+    // Stack içinde mutlak konumlandırma sağlamak için Positioned widget'ı kullanılır.
     return Positioned(
       left: posX,
       top: posY,
       child: Material(
-        elevation: 6,
+        elevation: 6, // Yüzen panel derinlik gölgesi.
         borderRadius: BorderRadius.circular(12),
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         child: Container(
@@ -47,14 +56,17 @@ class ObjectActionOverlay extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isPinned
-                  ? Colors.redAccent.withValues(alpha: 0.6)
+                  ? Colors.redAccent.withValues(
+                      alpha: 0.6,
+                    ) // Kilitliyse kırmızı çerçeve.
                   : (isDark ? Colors.white12 : Colors.black12),
             ),
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize:
+                MainAxisSize.min, // Yalnızca butonlar kadar yer kaplar.
             children: [
-              // Raptiye (Sabitleme) Butonu
+              // Raptiye (Sabitleme / Kilitleme) Butonu
               IconButton(
                 icon: Icon(
                   isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
@@ -63,11 +75,12 @@ class ObjectActionOverlay extends StatelessWidget {
                 ),
                 tooltip: isPinned ? 'Sabitlemeyi Kaldır' : 'Nesneyi Sabitle',
                 onPressed: () {
+                  // Seçili nesnenin raptiye durumunu tersine çevirir.
                   controller.togglePinSelectedObject();
                 },
               ),
 
-              // Metin Düzenleme Butonu (Post-it veya Metin ise)
+              // Metin Düzenleme Butonu (Yalnızca Post-it veya Metin nesnesi seçiliyse görünür)
               if (isTextEditable)
                 IconButton(
                   icon: const Icon(Icons.edit_note_rounded, size: 20),
@@ -80,6 +93,7 @@ class ObjectActionOverlay extends StatelessWidget {
                       initialText = selectedObj.text;
                     }
 
+                    // Metin düzenleme modal penceresini açar.
                     showDialog(
                       context: context,
                       builder: (ctx) => TextEditDialog(
@@ -88,6 +102,7 @@ class ObjectActionOverlay extends StatelessWidget {
                             : 'Metni Düzenle',
                         initialText: initialText,
                         onSave: (newText) {
+                          // Yeni metni controller üzerinden nesneye kaydeder.
                           controller.updateObjectText(selectedObj.id, newText);
                         },
                       ),
@@ -95,7 +110,7 @@ class ObjectActionOverlay extends StatelessWidget {
                   },
                 ),
 
-              // Çöp Kutusu (Silme) Butonu
+              // Çöp Kutusu (Nesneyi Silme) Butonu
               IconButton(
                 icon: const Icon(
                   Icons.delete_outline_rounded,
@@ -104,6 +119,7 @@ class ObjectActionOverlay extends StatelessWidget {
                 ),
                 tooltip: 'Nesneyi Sil',
                 onPressed: () {
+                  // Seçili nesneyi tuvalden siler.
                   controller.deleteSelectedObject();
                 },
               ),

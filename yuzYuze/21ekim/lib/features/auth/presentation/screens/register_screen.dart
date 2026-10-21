@@ -1,29 +1,39 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart'; // Flutter Material tasarım kütüphanesini içe aktarır.
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Riverpod durum yönetimi ConsumerStatefulWidget desteğini sağlar.
+import 'package:go_router/go_router.dart'; // go_router sayfa geçişlerini (context.push, context.pop) sağlar.
 
-import '../../../../core/widgets/app_logo.dart';
-import '../controllers/auth_controller.dart';
+import '../../../../core/widgets/app_logo.dart'; // BoardConnect logosu bileşenini içe aktarır.
+import '../controllers/auth_controller.dart'; // Kimlik doğrulama controller'ını içe aktarır.
 
 /// Kayıt Ol Ekranı (Register)
+/// Kullanıcıdan isim, soyisim, kullanıcı adı, e-posta ve şifre alarak hesap açma akışını başlatır.
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
-  @override
+  @override // Ekranın durum sınıfını üretir.
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
+/// Kayıt ekranının durum yönetimi sınıfı
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  // Formun doğruluğunu denetleyen anahtar.
   final _formKey = GlobalKey<FormState>();
+  // Kullanıcının adını tutan metin denetleyicisi.
   final _firstNameController = TextEditingController();
+  // Kullanıcının soyadını tutan metin denetleyicisi.
   final _lastNameController = TextEditingController();
+  // Kullanıcı rumuzunu tutan metin denetleyicisi.
   final _usernameController = TextEditingController();
+  // E-posta adresini tutan metin denetleyicisi.
   final _emailController = TextEditingController();
+  // Şifreyi tutan metin denetleyicisi.
   final _passwordController = TextEditingController();
+  // Şifrenin gizli mi görünür mü olduğunu takip eden bayrak.
   bool _obscurePassword = true;
+  // Kayıt işlemi sürerken butonları kilitleyip çark gösteren yükleme bayrağı.
   bool _isLoading = false;
 
-  @override
+  @override // Bellek sızıntılarını önlemek için tüm denetleyicileri yok eder (dispose).
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
@@ -33,10 +43,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
+  /// Kayıt Ol butonuna basıldığında çalışan fonksiyon
   Future<void> _handleRegister() async {
+    // Form alanları kurallara uygun değilse akışı durdurur.
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() => _isLoading = true); // Yüklenme durumunu başlatır.
     try {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
@@ -44,13 +56,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       final firstName = _firstNameController.text.trim();
       final lastName = _lastNameController.text.trim();
 
-      // OTP gönderim simülasyonu
+      // Proje akışına göre: E-posta ile kayıt olunduğunda önce 90 saniyelik OTP doğrulama kodu gönderilir.
       await ref
           .read(authControllerProvider.notifier)
           .sendVerificationOtp(email);
 
       if (mounted) {
-        // E-posta doğrulama ekranına kayıt bilgileriyle yönlendir
+        // Doğrulama sayfasına kayıt formundaki verileri 'extra' parametresi olarak aktararak yönlendirir.
         context.push(
           '/otp-verification',
           extra: {
@@ -64,6 +76,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
     } catch (e) {
       if (mounted) {
+        // Hata durumunda (zaten kayıtlı e-posta vb.) uyarı SnackBar'ı gösterir.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
@@ -74,11 +87,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isLoading = false); // Yüklenme durumunu kapatır.
       }
     }
   }
 
+  /// Google ile kayıt butonuna basıldığında açılan bilgilendirme penceresi.
   void _showGoogleNotice() {
     showDialog(
       context: context,
@@ -104,16 +118,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  @override
+  @override // Arayüzün çizildiği build fonksiyonu.
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final theme = Theme.of(context); // Temayı okur.
+    final isDark = theme.brightness == Brightness.dark; // Koyu mod kontrolü.
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
+          onPressed: () => context.pop(), // Giriş ekranına geri döner.
         ),
         title: const AppLogo(size: 32),
         centerTitle: true,
@@ -123,7 +137,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
+              constraints: const BoxConstraints(
+                maxWidth: 480,
+              ), // Maksimum genişlik sınırı.
               child: Card(
                 elevation: isDark ? 2 : 0,
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -141,11 +157,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     vertical: 36,
                   ),
                   child: Form(
-                    key: _formKey,
+                    key: _formKey, // Form doğrulaması için form anahtarını bağlar.
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        // Başlık
                         Text(
                           'Yeni Hesap Oluştur',
                           style: theme.textTheme.headlineSmall?.copyWith(
@@ -154,6 +171,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 6),
+                        // Alt başlık
                         Text(
                           'Takımınızla hemen ortak tuvalde buluşun.',
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -163,9 +181,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         const SizedBox(height: 28),
 
-                        // İsim ve Soyisim Yan Yana
+                        // İsim ve Soyisim Alanları (Yan Yana Row İçinde)
                         Row(
                           children: [
+                            // İsim alanı: Expanded ile yatay alanı eşit paylaşır.
                             Expanded(
                               child: TextFormField(
                                 controller: _firstNameController,
@@ -180,6 +199,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
+                            // Soyisim alanı: Expanded ile diğer yarıyı paylaşır.
                             Expanded(
                               child: TextFormField(
                                 controller: _lastNameController,
@@ -196,7 +216,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Kullanıcı Adı
+                        // Kullanıcı Adı Giriş Alanı
                         TextFormField(
                           controller: _usernameController,
                           decoration: const InputDecoration(
@@ -215,7 +235,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // E-posta
+                        // E-posta Giriş Alanı
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -235,10 +255,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Şifre
+                        // Şifre Giriş Alanı
                         TextFormField(
                           controller: _passwordController,
-                          obscureText: _obscurePassword,
+                          obscureText:
+                              _obscurePassword, // Şifreyi gizle/göster.
                           decoration: InputDecoration(
                             labelText: 'Şifre',
                             prefixIcon: const Icon(Icons.lock_outline_rounded),
@@ -294,7 +315,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Giriş Yap Bağlantısı
+                        // Zaten hesabınız var mı? Giriş Yap satırı
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -306,7 +327,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                             const SizedBox(width: 6),
                             GestureDetector(
-                              onTap: () => context.pop(),
+                              onTap: () =>
+                                  context.pop(), // Giriş ekranına geri döner.
                               child: Text(
                                 'Giriş Yap',
                                 style: TextStyle(

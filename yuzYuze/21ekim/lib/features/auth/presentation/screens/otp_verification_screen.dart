@@ -1,81 +1,107 @@
-import 'dart:async';
+import 'dart:async'; // Zamanlayıcı (Timer) işlemleri için Dart asenkron kütüphanesini içe aktarır.
 
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart'; // Flutter Material Design arayüz bileşenlerini içe aktarır.
+import 'package:flutter/services.dart'; // Metin girişini sadece rakamla sınırlamak için içe aktarır.
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Riverpod durum yönetimi ConsumerStatefulWidget desteğini sağlar.
+import 'package:go_router/go_router.dart'; // go_router sayfa yönlendirmelerini (context.go, context.pop) sağlar.
 
-import '../../../../core/config/app_constants.dart';
-import '../../../../core/widgets/app_logo.dart';
-import '../controllers/auth_controller.dart';
+import '../../../../core/config/app_constants.dart'; // Uygulama sabitlerini (90 saniyelik OTP süresi vb.) içe aktarır.
+import '../../../../core/widgets/app_logo.dart'; // BoardConnect logo bileşenini içe aktarır.
+import '../controllers/auth_controller.dart'; // Kimlik doğrulama controller'ını içe aktarır.
 
 /// E-posta Doğrulama Kodu Ekranı (6 Haneli, 90 Saniyelik OTP)
+/// Proje gereksinimlerine göre:
+/// 1. Kod yalnızca rakamlardan oluşur.
+/// 2. Kod tam olarak 6 hanelidir.
+/// 3. Geçerlilik süresi 90 saniyedir.
+/// 4. Sayaç formatı dakika:saniye (01:30) biçimindedir.
+/// 5. Kod girilmeden Onayla butonu pasiftir.
 class OtpVerificationScreen extends ConsumerStatefulWidget {
+  // Önceki kayıt ekranından gelen kullanıcı bilgilerini (ad, soyad, e-posta, şifre) taşıyan harita.
   final Map<String, dynamic> registrationData;
 
   const OtpVerificationScreen({super.key, required this.registrationData});
 
-  @override
+  @override // Widget'ın durum yönetim nesnesini oluşturur.
   ConsumerState<OtpVerificationScreen> createState() =>
       _OtpVerificationScreenState();
 }
 
+/// OTP doğrulama ekranı durum yönetimi sınıfı
 class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
+  // 6 haneli kodun girildiği metin kutusu denetleyicisi.
   final _codeController = TextEditingController();
+  // 90 saniyelik geri sayımı saniye saniye işleten zamanlayıcı nesnesi.
   Timer? _timer;
-  int _remainingSeconds = AppConstants.otpDurationSeconds; // 90 saniye
+  // Kalan saniye sayacı (başlangıç: AppConstants.otpDurationSeconds = 90 saniye).
+  int _remainingSeconds = AppConstants.otpDurationSeconds;
+  // İşlem devam ederken butonları kilitleyip çark gösteren yükleme bayrağı.
   bool _isLoading = false;
 
-  @override
+  @override // Widget ağaca ilk eklendiğinde çalışan başlatıcı metot (Lifecycle: initState).
   void initState() {
     super.initState();
-    _startCountdown();
+    _startCountdown(); // Sayfa açılır açılmaz 90 saniyelik geri sayımı başlatır.
   }
 
+  // Geri sayım sayacını kurup işleten yardımcı fonksiyon.
   void _startCountdown() {
-    _timer?.cancel();
+    _timer?.cancel(); // Varsa önceki sayacı durdurur.
     setState(() {
-      _remainingSeconds = AppConstants.otpDurationSeconds;
+      _remainingSeconds = AppConstants.otpDurationSeconds; // Süreyi 90'a kurar.
     });
+    // Her 1 saniyede bir tetiklenen periyodik zamanlayıcı kurar.
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) return;
+      if (!mounted) return; // Sayfa kapatıldıysa işlemi sonlandırır.
       if (_remainingSeconds > 0) {
         setState(() {
-          _remainingSeconds--;
+          _remainingSeconds--; // Süreyi 1 saniye azaltır ve ekranı yeniler.
         });
       } else {
-        timer.cancel();
+        timer.cancel(); // 0'a ulaşınca sayacı durdurur.
       }
     });
   }
 
-  @override
+  @override // Sayfadan çıkıldığında bellek temizliği yapar (Lifecycle: dispose).
   void dispose() {
-    _timer?.cancel();
-    _codeController.dispose();
+    _timer
+        ?.cancel(); // Zamanlayıcıyı sonlandırarak bellek sızıntısını engeller.
+    _codeController.dispose(); // Metin kutusu denetleyicisini serbest bırakır.
     super.dispose();
   }
 
+  // Kalan süreyi 'dakika:saniye' (örneğin '01:30') biçiminde metne dönüştüren hesaplayıcı.
   String get _formattedTime {
-    final minutes = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
-    final seconds = (_remainingSeconds % 60).toString().padLeft(2, '0');
+    final minutes = (_remainingSeconds ~/ 60).toString().padLeft(
+      2,
+      '0',
+    ); // Tam bölme ile dakikayı 2 basamağa tamamlar.
+    final seconds = (_remainingSeconds % 60).toString().padLeft(
+      2,
+      '0',
+    ); // Kalan saniyeyi 2 basamağa tamamlar.
     return '$minutes:$seconds';
   }
 
+  // Kullanıcı 'Onayla' butonuna bastığında çalışan doğrulama ve kayıt tamamlama fonksiyonu.
   Future<void> _handleConfirm() async {
     final code = _codeController.text.trim();
-    if (code.length != 6) return;
+    if (code.length != 6) return; // Kod 6 hane değilse işlem yapmaz.
 
-    setState(() => _isLoading = true);
-    final email = widget.registrationData['email'] as String? ?? '';
+    setState(() => _isLoading = true); // Yüklenme modunu açar.
+    final email =
+        widget.registrationData['email'] as String? ??
+        ''; // E-posta adresini alır.
 
     try {
+      // Girilen 6 haneli kodu doğrulaması için controller'a gönderir.
       final isValid = await ref
           .read(authControllerProvider.notifier)
           .verifyOtp(email, code);
 
       if (isValid) {
-        // Kayıt işlemini tamamla
+        // Kod doğruysa, bekletilen kayıt verileriyle asıl kullanıcı kaydını tamamlar.
         await ref
             .read(authControllerProvider.notifier)
             .register(
@@ -87,6 +113,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
             );
 
         if (mounted) {
+          // Başarılı kayıt bildirimini ekranda yeşil SnackBar olarak gösterir.
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
@@ -95,7 +122,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          context.go('/rooms');
+          context.go(
+            '/rooms',
+          ); // Kullanıcıyı doğrudan odalar sayfasına götürür.
         }
       }
     } catch (e) {
@@ -109,15 +138,17 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isLoading = false); // Yükleme modunu kapatır.
       }
     }
   }
 
+  // 90 saniye bittiğinde kullanıcının tekrar kod istemesini sağlayan fonksiyon.
   Future<void> _handleResend() async {
     final email = widget.registrationData['email'] as String? ?? '';
+    // Tekrar kod gönderme isteğini iletir.
     await ref.read(authControllerProvider.notifier).sendVerificationOtp(email);
-    _startCountdown();
+    _startCountdown(); // 90 saniyelik sayacı baştan başlatır.
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -128,12 +159,13 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
     }
   }
 
-  @override
+  @override // Ekran arayüzünü inşa eden build fonksiyonu.
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final theme = Theme.of(context); // Tema bilgilerini çeker.
+    final isDark = theme.brightness == Brightness.dark; // Koyu tema kontrolü.
     final email =
         widget.registrationData['email'] as String? ?? 'eposta@alanadi.com';
+    // Kod tam 6 haneli olduğunda onay butonunun aktif olması için denetim yapar.
     final isCodeComplete = _codeController.text.trim().length == 6;
 
     return Scaffold(
@@ -164,6 +196,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // E-posta doğrulama rozet ikonu
                       Container(
                         width: 56,
                         height: 56,
@@ -181,6 +214,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                       ),
                       const SizedBox(height: 20),
 
+                      // Başlık
                       Text(
                         'E-posta Doğrulama Kodu',
                         style: theme.textTheme.headlineSmall?.copyWith(
@@ -190,6 +224,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                       ),
                       const SizedBox(height: 8),
 
+                      // Kodun hangi e-postaya gittiğini bildiren açıklama metni
                       Text(
                         '$email adresine gönderilen 6 haneli doğrulama kodunu girin.',
                         style: theme.textTheme.bodyMedium?.copyWith(
@@ -199,7 +234,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Demo İpucu Bilgilendirmesi
+                      // Demo İpucu Bilgilendirmesi (Geliştirici ve test kullanıcısı rehberi)
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -233,22 +268,24 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // 6 Haneli Kod Girişi
+                      // 6 Haneli Kod Girişi Metin Alanı
                       TextField(
                         controller: _codeController,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        maxLength: 6,
+                        keyboardType:
+                            TextInputType.number, // Sadece sayısal tuş takımı.
+                        textAlign:
+                            TextAlign.center, // Kod karakterlerini ortalar.
+                        maxLength: 6, // 6 haneden fazla girişe izin vermez.
                         inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
+                          FilteringTextInputFormatter.digitsOnly, // Yalnızca 0-9 arası rakamlara izin verir.
                         ],
                         style: const TextStyle(
                           fontSize: 28,
-                          letterSpacing: 12,
+                          letterSpacing: 12, // Rakam kutucukları hissi veren geniş harf aralığı.
                           fontWeight: FontWeight.bold,
                         ),
                         decoration: InputDecoration(
-                          counterText: '',
+                          counterText: '', // Karakter sayacını gizler.
                           hintText: '000000',
                           hintStyle: TextStyle(
                             color: Colors.grey.withValues(alpha: 0.4),
@@ -256,12 +293,12 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                           ),
                         ),
                         onChanged: (val) {
-                          setState(() {});
+                          setState(() {}); // Her rakam girildiğinde butonu aktif etmek için ekranı yeniden çizer.
                         },
                       ),
                       const SizedBox(height: 16),
 
-                      // Sayaç Alanı (dakika:saniye formatı)
+                      // 90 Saniyelik Sayaç Alanı (dakika:saniye formatı Örn: 01:30)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -287,7 +324,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Süre bitince Tekrar Gönder butonu
+                      // Süre bittiğinde (0 saniye) beliren 'Tekrar Kod Gönder' butonu
                       if (_remainingSeconds == 0)
                         TextButton.icon(
                           onPressed: _handleResend,
@@ -296,11 +333,11 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                         ),
                       const SizedBox(height: 18),
 
-                      // Onayla Butonu (Kod 6 haneli değilse pasif)
+                      // Onayla Butonu (Kural gereği 6 hane tamamlanmadan pasiftir)
                       ElevatedButton(
                         onPressed: (isCodeComplete && !_isLoading)
                             ? _handleConfirm
-                            : null,
+                            : null, // Şartlar sağlanmadığında null verilerek buton kilitlenir.
                         child: _isLoading
                             ? const SizedBox(
                                 height: 22,
@@ -314,6 +351,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                       ),
                       const SizedBox(height: 12),
 
+                      // Bilgileri Değiştir (Geri Dön) Butonu
                       TextButton(
                         onPressed: () => context.pop(),
                         child: const Text('Bilgileri Değiştir'),
