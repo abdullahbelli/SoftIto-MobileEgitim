@@ -27,17 +27,25 @@ class DayDetailSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final dateStr = AppDateUtils.toDateString(date);
+    final badgeColor = AppColors.dynamicHeatMapColor(
+      ratio: report.completionRatio,
+      primaryColor: theme.colorScheme.primary,
+      isDark: isDark,
+    );
+
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Container(
+      height: screenHeight * 0.70,
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: theme.colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
+        top: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Sürükleme Çizgisi
@@ -46,29 +54,46 @@ class DayDetailSheet extends StatelessWidget {
                   width: 44,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    color: theme.colorScheme.outline,
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Tarih Başlığı
-              Text(
-                AppDateUtils.formatFullTurkish(date),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+              // Tarih Başlığı ve Kapat Butonu
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      AppDateUtils.formatFullTurkish(date),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded),
+                    tooltip: 'Kapat',
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
 
               // Tamamlama Durum Özeti
               if (!report.isPlannedDay) ...[
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+                    color: theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
@@ -88,26 +113,23 @@ class DayDetailSheet extends StatelessWidget {
                   ),
                 ),
               ] else ...[
-                // Başarı İlerleme Rozeti
+                // Başarı İlerleme Rozeti (Kırmızı-yeşil yerine tema rengi tonu)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: report.completionRatio >= 1.0
-                        ? Colors.green.withValues(alpha: 0.15)
-                        : (report.completionRatio > 0.0
-                            ? theme.colorScheme.primary.withValues(alpha: 0.12)
-                            : Colors.red.withValues(alpha: 0.12)),
+                    color: badgeColor.withValues(alpha: isDark ? 0.25 : 0.15),
                     borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: badgeColor.withValues(alpha: 0.4),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         report.completionRatio >= 1.0
                             ? Icons.stars_rounded
-                            : (report.completionRatio > 0.0 ? Icons.trending_up_rounded : Icons.cancel_outlined),
-                        color: report.completionRatio >= 1.0
-                            ? Colors.green
-                            : (report.completionRatio > 0.0 ? theme.colorScheme.primary : Colors.red),
+                            : (report.completionRatio > 0.0 ? Icons.trending_up_rounded : Icons.schedule_rounded),
+                        color: theme.colorScheme.primary,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -140,77 +162,82 @@ class DayDetailSheet extends StatelessWidget {
                 const SizedBox(height: 10),
 
                 // Alışkanlık Listesi
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: plannedHabits.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final habit = plannedHabits[index];
-                      final progress = progressMap['${habit.id}_$dateStr'];
-                      final isCompleted = progress?.isCompleted ?? false;
-                      final catIcon = AppConstants.categoryIcon(habit.category);
-                      final catColor = AppConstants.categoryColor(habit.category);
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: plannedHabits.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final habit = plannedHabits[index];
+                    final progress = progressMap['${habit.id}_$dateStr'];
+                    final isCompleted = progress?.isCompleted ?? false;
+                    final catIcon = AppConstants.categoryIcon(habit.category);
+                    final catColor = AppConstants.categoryColor(habit.category);
 
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isCompleted
-                                ? Colors.green.withValues(alpha: 0.5)
-                                : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isCompleted
+                              ? theme.colorScheme.primary.withValues(alpha: 0.6)
+                              : theme.colorScheme.outline,
+                          width: isCompleted ? 1.5 : 1.0,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: catColor.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(catIcon, color: catColor, size: 20),
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: catColor.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(catIcon, color: catColor, size: 20),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    habit.name,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                      decoration: isCompleted ? TextDecoration.lineThrough : null,
-                                    ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  habit.name,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                    decoration: isCompleted ? TextDecoration.lineThrough : null,
                                   ),
-                                  Text(
-                                    habit.targetType == AppConstants.targetTypeCheck
-                                        ? (isCompleted ? 'Tamamlandı' : 'Yapılmadı')
-                                        : '${(progress?.amount ?? 0).toInt()} / ${habit.targetValue.toInt()} ${habit.targetType == AppConstants.targetTypeDuration ? 'dk' : 'adet'}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                                    ),
+                                ),
+                                Text(
+                                  isCompleted ? '✓ Tamamlandı' : '○ Yapılmadı',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isCompleted ? FontWeight.w600 : FontWeight.normal,
+                                    color: isCompleted
+                                        ? theme.colorScheme.primary
+                                        : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                            Icon(
-                              isCompleted ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                              color: isCompleted ? Colors.green : Colors.grey,
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                          ),
+                          Icon(
+                            isCompleted ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                            color: isCompleted ? theme.colorScheme.primary : (isDark ? Colors.white38 : Colors.black26),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ],
               const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../models/habit.dart';
 import '../../models/habit_day_progress.dart';
+import '../../services/motivation_service.dart';
 
 /// Alışkanlık Kartı (HabitCard)
 /// Kategori ikonu, alışkanlık adı, seri (streak), ilerleme durumu,
@@ -12,9 +14,11 @@ class HabitCard extends StatelessWidget {
   final HabitDayProgress? progress;
   final int streak;
   final VoidCallback onToggle;
-  final VoidCallback onIncrement;
-  final VoidCallback onDecrement;
+  final VoidCallback? onIncrement;
+  final VoidCallback? onDecrement;
   final VoidCallback onEdit;
+  final VoidCallback? onTap;
+  final String? customMotivation;
 
   const HabitCard({
     super.key,
@@ -22,9 +26,11 @@ class HabitCard extends StatelessWidget {
     required this.progress,
     required this.streak,
     required this.onToggle,
-    required this.onIncrement,
-    required this.onDecrement,
+    this.onIncrement,
+    this.onDecrement,
     required this.onEdit,
+    this.onTap,
+    this.customMotivation,
   });
 
   @override
@@ -33,26 +39,36 @@ class HabitCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     final isCompleted = progress?.isCompleted ?? false;
-    final ratio = progress?.ratio ?? 0.0;
 
     final categoryColor = AppConstants.categoryColor(habit.category);
     final categoryIcon = AppConstants.categoryIcon(habit.category);
-    final motivation = AppConstants.motivationMessage(streak);
+
+    final motivationService = context.watch<MotivationService>();
+    final motivation = customMotivation ??
+        motivationService.getStreakMotivation(
+          streak: streak,
+          category: habit.category,
+          habitTitle: habit.name,
+        );
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 0,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(22),
         side: BorderSide(
           color: isCompleted
-              ? categoryColor.withValues(alpha: 0.6)
-              : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              ? Colors.green.withValues(alpha: 0.7)
+              : theme.colorScheme.outline,
           width: isCompleted ? 1.5 : 1.0,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -164,122 +180,96 @@ class HabitCard extends StatelessWidget {
             ),
             const SizedBox(height: 14),
 
-            // İlerleme Çubuğu (Progress bar)
+            // İlerleme Çubuğu (Yaptım ise %100, değilse %0)
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: LinearProgressIndicator(
-                value: ratio,
-                minHeight: 8,
-                backgroundColor: isDark
-                    ? AppColors.darkBorder.withValues(alpha: 0.5)
-                    : AppColors.lightBorder,
+                value: isCompleted ? 1.0 : 0.0,
+                minHeight: 6,
+                backgroundColor: theme.colorScheme.outline.withValues(alpha: isDark ? 0.35 : 0.25),
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  isCompleted ? Colors.green : categoryColor,
+                  isCompleted ? Colors.green : theme.colorScheme.primary,
                 ),
               ),
             ),
             const SizedBox(height: 12),
 
-            // Alt Satır: İlerleme Metni ve Tamamlama/Artırma Butonları
+            // Alt Satır: Durum Etiketi ve Yaptım / Yapmadım Butonu
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Miktar / Hedef etiketi
-                Text(
-                  _buildProgressText(),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: isCompleted
-                        ? Colors.green
-                        : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                  ),
+                // Durum etiketi
+                Row(
+                  children: [
+                    Icon(
+                      isCompleted ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                      size: 16,
+                      color: isCompleted
+                          ? Colors.green
+                          : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isCompleted ? 'Bugün yapıldı' : 'Bugün yapılmadı',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: isCompleted
+                            ? Colors.green
+                            : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                      ),
+                    ),
+                  ],
                 ),
 
-                // Kontroller
-                _buildActionButtons(theme, categoryColor, isCompleted),
+                // Yaptım / Yapmadım Aksiyon Butonu
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: onToggle,
+                    borderRadius: BorderRadius.circular(14),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isCompleted
+                            ? Colors.green
+                            : theme.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isCompleted
+                              ? Colors.green
+                              : theme.colorScheme.primary.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isCompleted ? Icons.check_rounded : Icons.add_task_rounded,
+                            size: 18,
+                            color: isCompleted ? Colors.white : theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            isCompleted ? 'Yaptım ✓' : 'Yaptım',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: isCompleted ? Colors.white : theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ],
         ),
       ),
-    );
-  }
-
-  String _buildProgressText() {
-    final current = progress?.amount ?? 0.0;
-    final target = habit.targetValue;
-
-    if (habit.targetType == AppConstants.targetTypeCheck) {
-      return (progress?.isCompleted ?? false) ? 'Tamamlandı 🎉' : 'Henüz yapılmadı';
-    } else if (habit.targetType == AppConstants.targetTypeDuration) {
-      return '${current.toInt()} / ${target.toInt()} dk';
-    } else {
-      return '${current.toInt()} / ${target.toInt()} adet';
-    }
-  }
-
-  Widget _buildActionButtons(ThemeData theme, Color categoryColor, bool isCompleted) {
-    if (habit.targetType == AppConstants.targetTypeCheck) {
-      return InkWell(
-        onTap: onToggle,
-        borderRadius: BorderRadius.circular(12),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: isCompleted
-                ? Colors.green
-                : categoryColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isCompleted ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                size: 18,
-                color: isCompleted ? Colors.white : categoryColor,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                isCompleted ? 'Yapıldı' : 'Tamamla',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: isCompleted ? Colors.white : categoryColor,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Adet veya Dakika için Sayaç Butonları
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton.filledTonal(
-          onPressed: (progress?.amount ?? 0) > 0 ? onDecrement : null,
-          icon: const Icon(Icons.remove_rounded, size: 16),
-          style: IconButton.styleFrom(
-            minimumSize: const Size(36, 36),
-            padding: EdgeInsets.zero,
-          ),
-        ),
-        const SizedBox(width: 6),
-        IconButton.filled(
-          onPressed: onIncrement,
-          icon: const Icon(Icons.add_rounded, size: 16),
-          style: IconButton.styleFrom(
-            backgroundColor: isCompleted ? Colors.green : categoryColor,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(36, 36),
-            padding: EdgeInsets.zero,
-          ),
-        ),
-      ],
-    );
-  }
+    ),
+  );
+}
 }

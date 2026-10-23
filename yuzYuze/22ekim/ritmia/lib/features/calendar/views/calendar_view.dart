@@ -76,10 +76,10 @@ class CalendarView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                  color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                    color: theme.colorScheme.outline,
                   ),
                 ),
                 child: DropdownButtonHideUnderline(
@@ -179,11 +179,11 @@ class CalendarView extends StatelessWidget {
                   report: report,
                   isFuture: isFuture,
                   isDark: isDark,
+                  primaryColor: theme.colorScheme.primary,
                 );
 
-                final isDarkBackground = report.isPlannedDay &&
-                    !isFuture &&
-                    (report.completionRatio >= 0.67 || report.completionRatio == 0.0);
+                // Arka plan renginin parlaklığına (luminance) göre dinamik metin rengi
+                final isDarkBackground = bgColor.computeLuminance() < 0.42;
 
                 return InkWell(
                   onTap: () => _showDayDetail(context, date, calendarCtrl, habitCtrl),
@@ -196,8 +196,10 @@ class CalendarView extends StatelessWidget {
                       border: Border.all(
                         color: isToday
                             ? theme.colorScheme.primary
-                            : Colors.transparent,
-                        width: isToday ? 2.0 : 0.0,
+                            : (report.isPlannedDay && !isFuture && report.completionRatio == 0.0
+                                ? theme.colorScheme.primary.withValues(alpha: isDark ? 0.35 : 0.25)
+                                : Colors.transparent),
+                        width: isToday ? 2.0 : 1.0,
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -221,7 +223,9 @@ class CalendarView extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.bold,
-                              color: isDarkBackground ? Colors.white70 : Colors.black54,
+                              color: isDarkBackground
+                                  ? Colors.white.withValues(alpha: 0.85)
+                                  : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
                             ),
                           ),
                         ],
@@ -234,7 +238,7 @@ class CalendarView extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Isı Haritası Açıklaması (Legend)
-            _buildLegend(isDark),
+            _buildLegend(context, isDark),
             const SizedBox(height: 24),
           ],
         ),
@@ -242,21 +246,24 @@ class CalendarView extends StatelessWidget {
     );
   }
 
-  Widget _buildLegend(bool isDark) {
+  Widget _buildLegend(BuildContext context, bool isDark) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          color: theme.colorScheme.outline,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Renk Göstergeleri',
+            'Renk Göstergeleri (Tamamlanma Oranı)',
             style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
@@ -264,11 +271,26 @@ class CalendarView extends StatelessWidget {
             spacing: 12,
             runSpacing: 8,
             children: [
-              _legendItem(AppColors.heatMap100, '%100 Tamam'),
-              _legendItem(AppColors.heatMap75, '%67-99'),
-              _legendItem(AppColors.heatMap50, '%34-66'),
-              _legendItem(AppColors.heatMap25, '%1-33'),
-              _legendItem(AppColors.heatMap0, '%0 Eksik'),
+              _legendItem(
+                AppColors.dynamicHeatMapColor(ratio: 0.0, primaryColor: primary, isDark: isDark),
+                '%0 (Yapılmayan)',
+              ),
+              _legendItem(
+                AppColors.dynamicHeatMapColor(ratio: 0.20, primaryColor: primary, isDark: isDark),
+                '%1-33',
+              ),
+              _legendItem(
+                AppColors.dynamicHeatMapColor(ratio: 0.50, primaryColor: primary, isDark: isDark),
+                '%34-66',
+              ),
+              _legendItem(
+                AppColors.dynamicHeatMapColor(ratio: 0.80, primaryColor: primary, isDark: isDark),
+                '%67-99',
+              ),
+              _legendItem(
+                AppColors.dynamicHeatMapColor(ratio: 1.0, primaryColor: primary, isDark: isDark),
+                '%100 (Tam Yapılan)',
+              ),
               _legendItem(
                 isDark ? AppColors.heatMapNeutralDark : AppColors.heatMapNeutralLight,
                 'Plan Yok / Gelecek',

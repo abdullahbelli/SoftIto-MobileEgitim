@@ -4,11 +4,14 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/ritmia_logo.dart';
 import '../controllers/habit_controller.dart';
 import '../models/habit.dart';
+import '../services/motivation_service.dart';
 import 'widgets/habit_card.dart';
+import 'widgets/habit_detail_sheet.dart';
 import 'widgets/habit_form_sheet.dart';
 
 /// Alışkanlıklarım Ekranı (My Habits View).
-/// Kullanıcının aktif alışkanlıklarını, genel alev serisini ve
+/// Kullanıcının aktif alışkanlıklarını, genel alev serisini,
+/// Hugging Face'ten dinamik çekilen motivasyon kartını ve
 /// günlük ilerleme durumlarını listeler.
 class MyHabitsView extends StatefulWidget {
   const MyHabitsView({super.key});
@@ -62,11 +65,27 @@ class _MyHabitsViewState extends State<MyHabitsView> with SingleTickerProviderSt
     );
   }
 
+  void _openHabitDetail(Habit habit) {
+    final habitController = context.read<HabitController>();
+    final progress = habitController.getProgress(habit.id);
+    final streak = habitController.getHabitStreak(habit);
+
+    HabitDetailSheet.show(
+      context,
+      habit: habit,
+      progress: progress,
+      streak: streak,
+      onToggle: () => habitController.toggleProgress(habit.id),
+      onEdit: () => _openHabitForm(habit),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final habitController = context.watch<HabitController>();
+    final motivationService = context.watch<MotivationService>();
 
     final activeHabits = habitController.activeHabits;
     final overallStreak = habitController.overallStreak;
@@ -86,6 +105,18 @@ class _MyHabitsViewState extends State<MyHabitsView> with SingleTickerProviderSt
           ],
         ),
         actions: [
+          // Eğer motivasyon kartı gizlendiyse tekrar açma ikonu
+          if (!motivationService.isBannerVisible)
+            IconButton(
+              icon: Icon(
+                Icons.auto_awesome_rounded,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              tooltip: 'Günün Motivasyonunu Göster',
+              onPressed: () => motivationService.setBannerVisible(true),
+            ),
+
           // Sağda Genel Seri (Streak) Göstergesi
           Container(
             margin: const EdgeInsets.only(right: 16),
@@ -122,8 +153,8 @@ class _MyHabitsViewState extends State<MyHabitsView> with SingleTickerProviderSt
       body: habitController.isLoading && activeHabits.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : isEmpty
-              ? _buildEmptyState(isDark)
-              : _buildHabitsList(activeHabits, habitController),
+              ? _buildEmptyState(context, theme, isDark, motivationService)
+              : _buildHabitsList(activeHabits, habitController, motivationService, theme, isDark),
       floatingActionButton: AnimatedBuilder(
         animation: _bounceAnimation,
         builder: (context, child) {
@@ -145,63 +176,247 @@ class _MyHabitsViewState extends State<MyHabitsView> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildEmptyState(bool isDark) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+  /// Hugging Face Motivasyon Kartı
+  Widget _buildHuggingFaceMotivationCard(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    MotivationService motivationService,
+  ) {
+    if (!motivationService.isBannerVisible) {
+      return const SizedBox.shrink();
+    }
+
+    final quote = motivationService.currentQuote;
+    if (quote == null && !motivationService.isLoading) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary.withValues(alpha: isDark ? 0.22 : 0.10),
+            theme.colorScheme.primaryContainer.withValues(alpha: isDark ? 0.15 : 0.20),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: isDark ? 0.35 : 0.25),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Üst Satır: Hugging Face Rozeti ve Butonlar (Yenileme + Gizleme)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: isDark ? 0.3 : 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('🤗', style: TextStyle(fontSize: 14)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Hugging Face Motivasyonu',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Icon(
-                Icons.track_changes_rounded,
-                size: 54,
-                color: Theme.of(context).colorScheme.primary,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: motivationService.isLoading
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.primary,
+                            ),
+                          )
+                        : Icon(
+                            Icons.refresh_rounded,
+                            size: 20,
+                            color: theme.colorScheme.primary,
+                          ),
+                    tooltip: 'Hugging Face\'ten Yeni Söz Al',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    onPressed: motivationService.isLoading
+                        ? null
+                        : () => motivationService.fetchQuote(force: true),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(
+                      Icons.close_rounded,
+                      size: 20,
+                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                    ),
+                    tooltip: 'Motivasyonu Gizle',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    onPressed: () => motivationService.setBannerVisible(false),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 24),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Alıntı Metni
+          if (quote != null) ...[
             Text(
-              'Henüz bir alışkanlık eklemediniz.',
-              textAlign: TextAlign.center,
+              '“${quote.text}”',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                height: 1.45,
                 color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Bugün ilk adımını atarak harika bir ritim başlat! Sağ alttaki + butonuna dokun.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+            if (quote.originalText != null && quote.originalText != quote.text) ...[
+              const SizedBox(height: 4),
+              Text(
+                '“${quote.originalText}”',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                ),
               ),
+            ],
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '— ${quote.author}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                if (quote.tag != null)
+                  Text(
+                    '#${quote.tag}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                    ),
+                  ),
+              ],
             ),
-            const SizedBox(height: 24),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('İlk Alışkanlığını Ekle'),
-              onPressed: () => _openHabitForm(),
-            ),
-          ],
-        ),
+          ] else
+            const Text('Hugging Face\'ten ilham verici söz yükleniyor...'),
+        ],
       ),
     );
   }
 
-  Widget _buildHabitsList(List<Habit> activeHabits, HabitController habitController) {
+  Widget _buildEmptyState(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    MotivationService motivationService,
+  ) {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          if (motivationService.isBannerVisible)
+            _buildHuggingFaceMotivationCard(context, theme, isDark, motivationService),
+          const SizedBox(height: 32),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.track_changes_rounded,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Henüz bir alışkanlık eklemediniz.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Bugün ilk adımını atarak harika bir ritim başlat! Sağ alttaki + butonuna dokun.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('İlk Alışkanlığını Ekle'),
+                    onPressed: () => _openHabitForm(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHabitsList(
+    List<Habit> activeHabits,
+    HabitController habitController,
+    MotivationService motivationService,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final showBanner = motivationService.isBannerVisible;
+    final bannerOffset = showBanner ? 1 : 0;
+
     return ListView.builder(
       padding: const EdgeInsets.only(top: 8, bottom: 84),
-      itemCount: activeHabits.length,
+      itemCount: activeHabits.length + bannerOffset,
       itemBuilder: (context, index) {
-        final habit = activeHabits[index];
+        if (showBanner && index == 0) {
+          return _buildHuggingFaceMotivationCard(context, theme, isDark, motivationService);
+        }
+
+        final habit = activeHabits[index - bannerOffset];
         final progress = habitController.getProgress(habit.id);
         final streak = habitController.getHabitStreak(habit);
 
@@ -210,6 +425,7 @@ class _MyHabitsViewState extends State<MyHabitsView> with SingleTickerProviderSt
           habit: habit,
           progress: progress,
           streak: streak,
+          onTap: () => _openHabitDetail(habit),
           onToggle: () => habitController.toggleProgress(habit.id),
           onIncrement: () => habitController.incrementProgress(habit.id),
           onDecrement: () => habitController.decrementProgress(habit.id),

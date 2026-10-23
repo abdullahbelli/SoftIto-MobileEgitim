@@ -12,6 +12,7 @@ import 'features/calendar/services/calendar_service.dart';
 import 'features/habits/controllers/habit_controller.dart';
 import 'features/habits/repositories/local_habit_repository.dart';
 import 'features/habits/services/habit_streak_service.dart';
+import 'features/habits/services/motivation_service.dart';
 import 'features/leaderboard/controllers/leaderboard_controller.dart';
 import 'features/leaderboard/repositories/demo_leaderboard_repository.dart';
 import 'features/leaderboard/services/leaderboard_service.dart';
@@ -27,6 +28,7 @@ void main() async {
   final habitStreakService = HabitStreakService();
   final calendarService = CalendarService(habitStreakService);
   final leaderboardService = LeaderboardService();
+  final motivationService = MotivationService(storageService);
 
   // 3. Veri Katmanı (Repository - Yerel & Demo simülasyonları)
   final authRepository = LocalAuthRepository(storageService);
@@ -53,6 +55,7 @@ void main() async {
         ChangeNotifierProvider.value(value: habitController),
         ChangeNotifierProvider.value(value: calendarController),
         ChangeNotifierProvider.value(value: leaderboardController),
+        ChangeNotifierProvider.value(value: motivationService),
       ],
       child: const RitmiaApp(),
     ),

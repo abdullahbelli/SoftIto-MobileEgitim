@@ -7,16 +7,20 @@ import '../../features/calendar/views/calendar_view.dart';
 import '../../features/habits/views/my_habits_view.dart';
 import '../../features/leaderboard/views/leaderboard_view.dart';
 import '../../features/profile/views/profile_view.dart';
+import '../../features/splash/views/splash_view.dart';
 
 /// Ritmia yönlendirme ve alt gezinme çubuğu (ShellRoute) konfigürasyonu.
 abstract final class AppRouter {
   static GoRouter createRouter(AuthController authController) {
     return GoRouter(
-      initialLocation: authController.isAuthenticated ? '/habits' : '/login',
+      initialLocation: '/splash',
       refreshListenable: authController,
       redirect: (context, state) {
+        final path = state.uri.toString();
+        if (path == '/splash') return null; // Splash ekranına her zaman izin ver
+
         final isLoggedIn = authController.isAuthenticated;
-        final isAuthRoute = state.uri.toString() == '/login' || state.uri.toString() == '/register';
+        final isAuthRoute = path == '/login' || path == '/register';
 
         if (!isLoggedIn && !isAuthRoute) {
           return '/login';
@@ -27,6 +31,10 @@ abstract final class AppRouter {
         return null;
       },
       routes: [
+        GoRoute(
+          path: '/splash',
+          builder: (context, state) => const SplashView(),
+        ),
         GoRoute(
           path: '/login',
           builder: (context, state) => const LoginView(),

@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/ritmia_logo.dart';
+import '../../habits/services/motivation_service.dart';
 import '../controllers/auth_controller.dart';
 
 /// Giriş Ekranı (Login View)
@@ -70,7 +71,38 @@ class _LoginViewState extends State<LoginView> {
                       showSlogan: true,
                     ),
                   ),
-                  const SizedBox(height: 28),
+
+                  // Günün Motivasyonu (Hugging Face)
+                  Consumer<MotivationService>(
+                    builder: (context, motivationService, _) {
+                      final quote = motivationService.currentQuote;
+                      if (quote == null) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 14),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Text(
+                            '“${quote.text}”\n— ${quote.author}',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
 
                   // Demo Oturum Uyarısı (project.md Kuralı)
                   Container(

@@ -10,18 +10,44 @@ import '../../badges/models/badge_definition.dart';
 import '../../badges/services/badge_service.dart';
 import '../../badges/views/widgets/badge_item.dart';
 import '../../habits/controllers/habit_controller.dart';
-import 'widgets/edit_profile_dialog.dart';
+import 'widgets/edit_profile_sheet.dart';
 
 /// Profil Ekranı (Profile View).
 /// Kullanıcı bilgileri, istatistikler, rozetler, açık/koyu tema değiştirme,
 /// vurgu rengi seçimi, lig katılım kontrolü ve çıkış yapma işlevlerini içerir.
-class ProfileView extends StatelessWidget {
-  const ProfileView({super.key});
+class ProfileView extends StatefulWidget {
+  final bool autoOpenEdit;
+
+  const ProfileView({
+    super.key,
+    this.autoOpenEdit = false,
+  });
+
+  @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.autoOpenEdit) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final authCtrl = context.read<AuthController>();
+        final user = authCtrl.currentUser;
+        if (user != null && mounted) {
+          _openEditProfile(context, user, authCtrl);
+        }
+      });
+    }
+  }
 
   void _openEditProfile(BuildContext context, UserProfile user, AuthController authCtrl) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => EditProfileDialog(
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => EditProfileSheet(
         profile: user,
         onSave: (updated) => authCtrl.updateProfile(updated),
       ),
@@ -189,6 +215,7 @@ class ProfileView extends StatelessWidget {
                 child: BadgeItem(
                   definition: def,
                   earnedBadge: earned,
+                  currentStreak: habitCtrl.overallStreak,
                 ),
               );
             }),
@@ -198,10 +225,10 @@ class ProfileView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  color: theme.colorScheme.outline,
                 ),
               ),
               child: Column(
@@ -285,13 +312,12 @@ class ProfileView extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Liderlik Katılım Tercihi
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+            Material(
+              color: theme.colorScheme.surface,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                side: BorderSide(
+                  color: theme.colorScheme.outline,
                 ),
               ),
               child: SwitchListTile(
@@ -344,15 +370,16 @@ class ProfileView extends StatelessWidget {
     required IconData icon,
     required Color color,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          color: theme.colorScheme.outline,
         ),
       ),
       child: Column(

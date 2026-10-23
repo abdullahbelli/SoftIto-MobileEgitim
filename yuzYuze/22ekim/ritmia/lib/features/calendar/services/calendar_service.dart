@@ -34,29 +34,24 @@ class CalendarService {
     return days;
   }
 
-  /// Günün tamamlanma oranına göre ısı haritası rengini döner
+  /// Günün tamamlanma oranına göre ısı haritası rengini döner.
+  /// Kırmızı-yeşil yerine yapılmayanlardan yapılanlara doğru tema rengi koyulaşarak gider.
   Color getHeatMapColor({
     required DayCompletionReport report,
     required bool isFuture,
     required bool isDark,
+    Color? primaryColor,
   }) {
     if (isFuture || !report.isPlannedDay) {
       return isDark ? AppColors.heatMapNeutralDark : AppColors.heatMapNeutralLight;
     }
 
-    final ratio = report.completionRatio;
-
-    if (ratio >= 1.0) {
-      return AppColors.heatMap100; // %100 koyu yeşil
-    } else if (ratio >= 0.67) {
-      return AppColors.heatMap75;  // %67-99 orta yeşil
-    } else if (ratio >= 0.34) {
-      return AppColors.heatMap50;  // %34-66 açık yeşil
-    } else if (ratio > 0.0) {
-      return AppColors.heatMap25;  // %1-33 soluk yeşil
-    } else {
-      return AppColors.heatMap0;   // %0 kırmızı
-    }
+    final accent = primaryColor ?? (isDark ? AppColors.darkPrimary : AppColors.lightPrimary);
+    return AppColors.dynamicHeatMapColor(
+      ratio: report.completionRatio,
+      primaryColor: accent,
+      isDark: isDark,
+    );
   }
 
   /// Gün raporunu hesaplar

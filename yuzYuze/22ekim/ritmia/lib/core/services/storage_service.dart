@@ -99,6 +99,17 @@ class StorageService {
     return _prefs.setStringList(_keyBadges, rawList);
   }
 
+  // Hugging Face Günlük Motivasyon Önbelleği
+  static const String _keyMotivation = 'ritmia_daily_motivation';
+  static const String _keyMotivationBannerVisible = 'ritmia_motivation_banner_visible';
+
+  String? getDailyMotivation() => _prefs.getString(_keyMotivation);
+  Future<bool> setDailyMotivation(String json) => _prefs.setString(_keyMotivation, json);
+
+  bool isMotivationBannerVisible() => _prefs.getBool(_keyMotivationBannerVisible) ?? true;
+  Future<bool> setMotivationBannerVisible(bool visible) =>
+      _prefs.setBool(_keyMotivationBannerVisible, visible);
+
   // Demo verilerini sıfırlamak veya çıkış yapmak için
   Future<void> clearSession() async {
     await _prefs.remove(_keyCurrentUser);

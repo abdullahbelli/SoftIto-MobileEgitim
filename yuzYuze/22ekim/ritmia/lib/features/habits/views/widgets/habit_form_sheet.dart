@@ -150,285 +150,303 @@ class _HabitFormSheetState extends State<HabitFormSheet> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final keyboardBottom = MediaQuery.of(context).viewInsets.bottom;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Container(
+      height: screenHeight * 0.70, // Sayfanın %70'ini kaplar
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        color: theme.colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
+        top: false,
         child: Padding(
           padding: EdgeInsets.only(bottom: keyboardBottom),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Sürükleme Çizgisi (Drag Handle)
-                  Center(
-                    child: Container(
-                      width: 44,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                        borderRadius: BorderRadius.circular(10),
+          child: Column(
+            children: [
+              // Üst Sabit Başlık ve Sürükleme Çizgisi
+              Padding(
+                padding: const EdgeInsets.only(top: 12, left: 24, right: 24, bottom: 8),
+                child: Column(
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.outline,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Başlık ve Silme Butonu
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        isEditing ? 'Alışkanlığı Düzenle' : 'Yeni Alışkanlık',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          isEditing ? 'Alışkanlığı Düzenle' : 'Yeni Alışkanlık',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      if (isEditing)
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-                          tooltip: 'Alışkanlığı Sil',
-                          onPressed: _handleDelete,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Alışkanlık Adı
-                  CustomTextField(
-                    controller: _nameController,
-                    label: 'Alışkanlık Adı *',
-                    hint: 'Örn: Kitap Oku, Su İç, Koşu Yap',
-                    prefixIcon: Icons.edit_note_rounded,
-                    validator: (val) {
-                      if (val == null || val.trim().length < 3) {
-                        return 'Alışkanlık adı en az 3 karakter olmalıdır';
-                      }
-                      if (val.trim().length > 60) {
-                        return 'Alışkanlık adı en fazla 60 karakter olabilir';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Açıklama (İsteğe bağlı)
-                  CustomTextField(
-                    controller: _descriptionController,
-                    label: 'Açıklama (İsteğe bağlı)',
-                    hint: 'Kısa motivasyon veya not',
-                    prefixIcon: Icons.notes_rounded,
-                    maxLines: 2,
-                    validator: (val) {
-                      if (val != null && val.trim().length > 160) {
-                        return 'Açıklama en fazla 160 karakter olabilir';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Kategori Seçimi
-                  const Text(
-                    'Kategori',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: AppConstants.habitCategories.map((cat) {
-                      final isSelected = _selectedCategory == cat;
-                      final catColor = AppConstants.categoryColor(cat);
-                      final catIcon = AppConstants.categoryIcon(cat);
-
-                      return ChoiceChip(
-                        avatar: Icon(catIcon, size: 16, color: isSelected ? Colors.white : catColor),
-                        label: Text(cat),
-                        selected: isSelected,
-                        selectedColor: catColor,
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 12,
-                        ),
-                        onSelected: (selected) {
-                          if (selected) setState(() => _selectedCategory = cat);
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Hedef Türü
-                  const Text(
-                    'Hedef Türü',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(
-                        value: AppConstants.targetTypeCheck,
-                        label: Text('Evet/Hayır'),
-                        icon: Icon(Icons.check_circle_outline_rounded),
-                      ),
-                      ButtonSegment(
-                        value: AppConstants.targetTypeCount,
-                        label: Text('Adet'),
-                        icon: Icon(Icons.numbers_rounded),
-                      ),
-                      ButtonSegment(
-                        value: AppConstants.targetTypeDuration,
-                        label: Text('Dakika'),
-                        icon: Icon(Icons.timer_outlined),
-                      ),
-                    ],
-                    selected: {_selectedTargetType},
-                    onSelectionChanged: (set) {
-                      setState(() => _selectedTargetType = set.first);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Hedef Miktarı (Adet veya Dakika seçilmişse)
-                  if (_selectedTargetType != AppConstants.targetTypeCheck) ...[
-                    CustomTextField(
-                      controller: _targetValueController,
-                      label: _selectedTargetType == AppConstants.targetTypeDuration
-                          ? 'Günlük Hedef Süre (Dakika) *'
-                          : 'Günlük Hedef Miktar (Adet/Sayfa) *',
-                      hint: 'Örn: 20',
-                      keyboardType: TextInputType.number,
-                      prefixIcon: _selectedTargetType == AppConstants.targetTypeDuration
-                          ? Icons.access_time_rounded
-                          : Icons.flag_rounded,
-                      validator: (val) {
-                        final parsed = double.tryParse(val ?? '');
-                        if (parsed == null || parsed <= 0) {
-                          return 'Pozitif bir sayı girmelisiniz';
-                        }
-                        return null;
-                      },
+                        if (isEditing)
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                            tooltip: 'Alışkanlığı Sil',
+                            onPressed: _handleDelete,
+                          )
+                        else
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded),
+                            tooltip: 'Kapat',
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
                   ],
+                ),
+              ),
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outline.withValues(alpha: 0.5),
+              ),
 
-                  // Tekrarlama / Planlanan Günler
-                  const Text(
-                    'Tekrarlama Günleri',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: List.generate(7, (index) {
-                      final dayNum = index + 1; // 1 = Pzt ... 7 = Paz
-                      final isSelected = _selectedWeekdays.contains(dayNum);
-                      final dayName = AppConstants.weekdayShortNames[dayNum] ?? '';
-
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            if (isSelected) {
-                              if (_selectedWeekdays.length > 1) {
-                                _selectedWeekdays.remove(dayNum);
-                              }
-                            } else {
-                              _selectedWeekdays.add(dayNum);
-                              _selectedWeekdays.sort();
+              // Kaydırılabilir Form Gövdesi (Scroll Özelliği)
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Alışkanlık Adı
+                        CustomTextField(
+                          controller: _nameController,
+                          label: 'Alışkanlık Adı *',
+                          hint: 'Örn: Kitap Oku, Su İç, Koşu Yap',
+                          prefixIcon: Icons.edit_note_rounded,
+                          validator: (val) {
+                            if (val == null || val.trim().length < 3) {
+                              return 'Alışkanlık adı en az 3 karakter olmalıdır';
                             }
-                          });
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: 40,
-                          height: 40,
-                          alignment: Alignment.center,
+                            if (val.trim().length > 60) {
+                              return 'Alışkanlık adı en fazla 60 karakter olabilir';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Açıklama (İsteğe bağlı)
+                        CustomTextField(
+                          controller: _descriptionController,
+                          label: 'Açıklama (İsteğe bağlı)',
+                          hint: 'Kısa motivasyon veya not',
+                          prefixIcon: Icons.notes_rounded,
+                          maxLines: 2,
+                          validator: (val) {
+                            if (val != null && val.trim().length > 160) {
+                              return 'Açıklama en fazla 160 karakter olabilir';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Kategori Seçimi
+                        const Text(
+                          'Kategori',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: AppConstants.habitCategories.map((cat) {
+                            final isSelected = _selectedCategory == cat;
+                            final catColor = AppConstants.categoryColor(cat);
+                            final catIcon = AppConstants.categoryIcon(cat);
+
+                            return ChoiceChip(
+                              avatar: Icon(catIcon, size: 16, color: isSelected ? Colors.white : catColor),
+                              label: Text(cat),
+                              selected: isSelected,
+                              selectedColor: catColor,
+                              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                              labelStyle: TextStyle(
+                                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                fontSize: 12,
+                              ),
+                              onSelected: (selected) {
+                                if (selected) setState(() => _selectedCategory = cat);
+                              },
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Takip Modeli (Yaptım / Yapmadım)
+                        const Text(
+                          'Takip Türü',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                           decoration: BoxDecoration(
-                            color: isSelected
-                                ? theme.colorScheme.primary
-                                : (isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected
-                                  ? theme.colorScheme.primary
-                                  : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                            ),
+                            color: theme.colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: theme.colorScheme.outline),
                           ),
-                          child: Text(
-                            dayName,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                              color: isSelected
-                                  ? Colors.white
-                                  : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                            ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.check_circle_rounded, color: theme.colorScheme.primary, size: 22),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Yaptım / Yapmadım (Evet/Hayır)',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: theme.colorScheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Adet sayacı yerine pratik tek dokunuşla tamamlama.',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                  // Hatırlatıcı Saati
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Hatırlatıcı Saati (İsteğe bağlı)',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _reminderTime != null
-                                  ? '${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}'
-                                  : 'Saat seçilmedi',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        // Tekrarlama / Planlanan Günler
+                        const Text(
+                          'Tekrarlama Günleri',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: List.generate(7, (index) {
+                            final dayNum = index + 1; // 1 = Pzt ... 7 = Paz
+                            final isSelected = _selectedWeekdays.contains(dayNum);
+                            final dayName = AppConstants.weekdayShortNames[dayNum] ?? '';
+
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  if (isSelected) {
+                                    if (_selectedWeekdays.length > 1) {
+                                      _selectedWeekdays.remove(dayNum);
+                                    }
+                                  } else {
+                                    _selectedWeekdays.add(dayNum);
+                                    _selectedWeekdays.sort();
+                                  }
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                width: 40,
+                                height: 40,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.outline,
+                                  ),
+                                ),
+                                child: Text(
+                                  dayName,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                                  ),
+                                ),
                               ),
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Hatırlatıcı Saati
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Hatırlatıcı Saati (İsteğe bağlı)',
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _reminderTime != null
+                                        ? '${_reminderTime!.hour.toString().padLeft(2, '0')}:${_reminderTime!.minute.toString().padLeft(2, '0')}'
+                                        : 'Saat seçilmedi',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            OutlinedButton.icon(
+                              icon: const Icon(Icons.alarm_rounded, size: 18),
+                              label: Text(_reminderTime == null ? 'Saat Belirle' : 'Değiştir'),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: theme.colorScheme.outline),
+                              ),
+                              onPressed: () async {
+                                final picked = await showTimePicker(
+                                  context: context,
+                                  initialTime: _reminderTime ?? const TimeOfDay(hour: 9, minute: 0),
+                                );
+                                if (picked != null) {
+                                  setState(() => _reminderTime = picked);
+                                }
+                              },
                             ),
                           ],
                         ),
-                      ),
-                      OutlinedButton.icon(
-                        icon: const Icon(Icons.alarm_rounded, size: 18),
-                        label: Text(_reminderTime == null ? 'Saat Belirle' : 'Değiştir'),
-                        onPressed: () async {
-                          final picked = await showTimePicker(
-                            context: context,
-                            initialTime: _reminderTime ?? const TimeOfDay(hour: 9, minute: 0),
-                          );
-                          if (picked != null) {
-                            setState(() => _reminderTime = picked);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                  // Kaydet Butonu
-                  CustomButton(
-                    text: isEditing ? 'Değişiklikleri Kaydet' : 'Alışkanlığı Oluştur',
-                    onPressed: _handleSave,
+                        // Kaydet Butonu
+                        CustomButton(
+                          text: isEditing ? 'Değişiklikleri Kaydet' : 'Alışkanlığı Oluştur',
+                          onPressed: _handleSave,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
