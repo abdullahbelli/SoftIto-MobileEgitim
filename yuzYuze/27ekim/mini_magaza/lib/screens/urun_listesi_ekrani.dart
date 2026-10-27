@@ -1,0 +1,60 @@
+import 'package:flutter/material.dart';
+
+import '../models/kategori.dart';
+import '../models/urun.dart';
+import '../services/mock_urun_servisi.dart';
+import '../services/i_urun_service.dart';
+
+class UrunListesiEkrani extends StatefulWidget{
+    const UrunListesiEkrani({super.key});
+
+    @override
+    State<UrunListesiEkrani> createState() => _UrunListesiEkraniState();
+
+
+}
+
+class _UrunListesiEkraniState extends State<UrunListesiEkrani>{
+    //Servis sınıfından nesne türettik
+    final IUrunService _servis = MockUrunServisi();
+    bool _yukleniyorMu=true;
+
+    Kategori _seciliKategori=Kategori.hepsi;
+
+    String _aramaKelimesi="";
+
+    List<Urun> _gosterilenUrunler = [];
+
+    @override
+    void initState(){
+        super.initState();
+        _urunleriYukle();
+    }
+
+    Future<void>_urunleriYukle() async {
+        setState((){
+            _yukleniyorMu=true;
+            
+        });
+
+        final urunler = await _servis.kategoriyeGoreGetir(_seciliKategori);
+
+        if(mounted){
+            setState((){
+                _gosterilenUrunler=urunler;
+                _yukleniyorMu=false;
+            });
+        }
+    }
+
+    @override
+    Widget build(BuildContext context){
+        return Scaffold(
+            appBar: AppBar(
+                title: const Text("Mini Mağaza"),
+            ),
+            body:_yukleniyorMu ? const Center(child: CircularProgressIndicator()): Center(child:Text('${_gosterilenUrunler.length} ürün hazır'))
+        );
+    }
+    
+}
