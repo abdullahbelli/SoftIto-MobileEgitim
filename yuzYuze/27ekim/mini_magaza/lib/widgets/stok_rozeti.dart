@@ -13,7 +13,7 @@ class StokRozeti extends StatelessWidget{
             padding : const EdgeInsets.symmetric(horizontal:8,vertical:4),
             decoration: BoxDecoration(
                 color:tukendiMi? Colors.red.shade100: Colors.green.shade100,
-                borderRadius: BorderRadius.cicular(6), //px ya da yüzde yazılmayaıp sadece sayı yazılırsa sistem bunu yüzde olarak algılar
+                borderRadius: BorderRadius.circular(6), //px ya da yüzde yazılmayaıp sadece sayı yazılırsa sistem bunu yüzde olarak algılar
                 border: Border.all(
                     color:tukendiMi? Colors.red.shade400: Colors.green.shade400,
                     width:0.8,  
