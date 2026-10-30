@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../models/kategori.dart';
 import '../models/urun.dart';
-import '../services/mock_urun_servisi.dart';
+//import '../services/mock_urun_servisi.dart';
 import '../services/i_urun_service.dart';
 import '../widgets/urun_karti.dart';
+import '../services/api_urun_servisi.dart';
 
 
 
@@ -19,7 +20,7 @@ class UrunListesiEkrani extends StatefulWidget{
 
 class _UrunListesiEkraniState extends State<UrunListesiEkrani>{
     //Servis sınıfından nesne türettik
-    final IUrunService _servis = MockUrunServisi();
+    final IUrunService _servis = ApiUrunServisi();
 
     final TextEditingController _aramaController = TextEditingController();
     
@@ -150,9 +151,9 @@ class _UrunListesiEkraniState extends State<UrunListesiEkrani>{
                                 final seciliMi=_seciliKategori==kategori;
                                 return Padding(
                                     padding:const EdgeInsets.symmetric(horizontal:4.0),
-                                    child:ChoiceChip(
-                                        avatar:Text(kategori.ikon),
-                                        label:Text(kategori.baslik),
+                                    /*child:ChoiceChip(
+                                        //avatar:Text(kategori.ikon),
+                                        //label:Text(kategori.baslik),
                                         selected:seciliMi,
                                         onSelected:(secildi){
                                             setState((){
@@ -160,7 +161,7 @@ class _UrunListesiEkraniState extends State<UrunListesiEkrani>{
                                                 _filtreyiUygula();
                                             });
                                         },
-                                    ),
+                                    ),*/
                                 );
                             }).toList()
                         )

@@ -1,4 +1,5 @@
 import 'package:mini_magaza/models/kategori.dart';
+import 'degerlendirme.dart';
 
 class Urun {
   final int id;
@@ -9,6 +10,7 @@ class Urun {
   final Kategori kategori;
   final int stokAdedi;
   final bool favoriMi;
+  final Degerelendirme degerlendirme;
 
 
     const Urun({
@@ -19,8 +21,25 @@ class Urun {
       required this.resimUrl,
       required this.kategori,
       required this.stokAdedi,
+      required this.degerlendirme,
       this.favoriMi = false,
+
     });
+
+
+    factory Urun.fromJson(Map<String,dynamic> json){
+      return Urun(
+        id : json['id'] as int,
+        baslik: json['title'] as String,
+        fiyat : (json['price'] as num).toDouble(),
+        aciklama : json['description'] as String,
+        kategori : json['category'] as Kategori,
+        resimUrl: json['image'] as String,
+        degerlendirme : Degerelendirme.fromJson(json['rating'] as Map<String,dynamic>),
+        stokAdedi: 15,
+        favoriMi:false,
+      );
+    }
 
     Urun copyWith({
         int? id,
@@ -30,6 +49,7 @@ class Urun {
         String? resimUrl,
         Kategori? kategori,
         int? stokAdedi,
+        Degerelendirme? degerlendirme,
         bool? favoriMi,
     }){
         return Urun(
@@ -40,6 +60,7 @@ class Urun {
         resimUrl: resimUrl ?? this.resimUrl,
         kategori: kategori ?? this.kategori,
         stokAdedi: stokAdedi ?? this.stokAdedi,
+        degerlendirme:degerlendirme ?? this.degerlendirme,
         favoriMi: favoriMi ?? this.favoriMi,
     );
   }
