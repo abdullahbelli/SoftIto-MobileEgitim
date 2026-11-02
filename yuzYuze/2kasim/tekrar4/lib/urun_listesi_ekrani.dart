@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+
 import 'tekrar4_katmanli_mimari.dart';
 
 class UrunListesiEkrani extends StatefulWidget {
@@ -10,86 +10,99 @@ class UrunListesiEkrani extends StatefulWidget {
 }
 
 class _UrunListesiEkraniState extends State<UrunListesiEkrani> {
-
+  // Ürünleri getirecek servis
   final IUrunServisi _servis = CanliApiUrunServisi();
 
+  // API'den gelen ürünler
   List<UrunModel> _tumUrunler = [];
 
+  // Yükleme durumu
   bool _yukleniyor = true;
-  // Ağ veya sunucu hatası oluştuğunda hata metnini tutan değişken (hata yoksa null'dır)
+
+  // Hata mesajı
   String? _hataMesaji;
 
   @override
-  // initState metodunun gövdesi
   void initState() {
-    // Üst sınıfın initState metodunu çağırır
     super.initState();
-    // Sayfa açılır açılmaz ürünleri API'den çekmeye başlar
-    _urunleriYukle();
-  // initState metodunun kapanış parantezi
-  }
 
-  // Widget ağaçtan kaldırıldığında bellek sızıntısını önleyen yaşam döngüsü metodu
-  @override
-  // dispose metodunun gövdesi
-  void dispose() {
-    // Arama kontrolcüsünü bellekten serbest bırakır
-    
-    // Üst sınıfın dispose metodunu çağırır
-    super.dispose();
-  // dispose metodunun kapanış parantezi
+    // Ekran açılınca ürünleri getir
+    _urunleriYukle();
   }
 
   Future<void> _urunleriYukle() async {
-    // Ekranı 'Yükleniyor' moduna sokmak ve eski hataları temizlemek için setState çağrılır
     setState(() {
-      // Yüklenme animasyonunu başlatır
       _yukleniyor = true;
-      // Varsa önceki hata mesajını sıfırlar
       _hataMesaji = null;
-    // setState kapanışı
     });
 
-    // Olası ağ kopmaları, zaman aşımı ve format hataları için try bloğu
     try {
-      // Servis üzerinden HTTP GET isteğini atar ve ürün listesini bekler
+      // Servisten ürünleri al
       final urunler = await _servis.urunleriGetir();
-      // Widget ağaçta hâlâ aktif mi kontrol eder (kullanıcı sayfa yüklenirken geri çıktıysa hata almamak için)
+
       if (!mounted) return;
 
-      // Veriler başarıyla geldiyse durumu günceller
       setState(() {
-        // Ham ürün listesini kaydeder
         _tumUrunler = urunler;
-        // Başlangıçta tüm ürünleri filtreli listeye de aktarır
-        
-        // Yüklenme bayrağını kapatır
-        
-      // setState kapanışı
-      });
-      // Varsa mevcut filtreleri yeni listeye uygular
-      
-    // Ağ, zaman aşımı veya sunucu kaynaklı bir hata yakalandığında
-    } catch (hata) {
-      // Widget ağaçta hâlâ aktif mi kontrol eder
-      if (!mounted) return;
-      // Ekranı 'Hata' durumuna geçirmek için setState çağrılır
-      setState(() {
-        // Kullanıcıya gösterilecek anlaşılır hata metnini oluşturur
-        _hataMesaji = 'Ürünler yüklenirken bir sorun oluştu.\nİnternet bağlantınızı kontrol edin.';
-        // Yüklenme durumunu kapatır
         _yukleniyor = false;
-      // setState kapanışı
       });
-    // try-catch kapanışı
+    } catch (hata) {
+      if (!mounted) return;
+
+      setState(() {
+        _hataMesaji = 'Ürünler yüklenemedi: $hata';
+        _yukleniyor = false;
+      });
     }
-  // _urunleriYukle fonksiyonu kapanış parantezi
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(title: const Text('Ürün Listesi')),
+
+      body: _yukleniyor
+          // Veriler gelene kadar yükleniyor göster
+          ? const Center(child: CircularProgressIndicator())
+          // Hata varsa mesaj ve tekrar dene butonu
+          : _hataMesaji != null
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_hataMesaji!),
+                  ElevatedButton(
+                    onPressed: _urunleriYukle,
+                    child: const Text('Tekrar Dene'),
+                  ),
+                ],
+              ),
+            )
+          // Ürünler geldiyse listele
+          : ListView.builder(
+              itemCount: _tumUrunler.length,
+
+              itemBuilder: (context, index) {
+                final urun = _tumUrunler[index];
+
+                return ListTile(
+                  leading: Image.network(
+                    urun.resimUrl,
+                    width: 50,
+                    height: 50,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.image_not_supported);
+                    },
+                  ),
+
+                  title: Text(urun.baslik),
+
+                  subtitle: Text(urun.kategori),
+
+                  trailing: Text('${urun.fiyat} TL'),
+                );
+              },
+            ),
     );
   }
 }
