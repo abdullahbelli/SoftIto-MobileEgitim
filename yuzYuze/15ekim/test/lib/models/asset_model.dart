@@ -1,12 +1,14 @@
 class Asset {
-  final String symbol;
-  final String name;
-  final double price;
-  final double change24h;
-  final double balance;
+  // nesen bilgilerini tutan model sınıfı
+  final String symbol; //sembol
+  final String name; //ad
+  final double price; // fiyat
+  final double change24h; // 24 saatlik değişim
+  final double balance; //sahip olunan varlık
 
   const Asset({
-    required this.symbol,
+    // asset nesnesini oluşturan sabit constructor
+    required this.symbol, //required: doldurulması zorunlu alanlar.
     required this.name,
     required this.price,
     required this.change24h,

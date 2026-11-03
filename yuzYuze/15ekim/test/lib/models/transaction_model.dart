@@ -1,15 +1,18 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // ikon ve arayüz bileşenlerinn kullanılmasını sağlar
 
 class TransactionItem {
-  final String id;
-  final String title;
-  final String category;
-  final String date;
-  final double amount;
-  final bool isExpanse;
-  final IconData icon;
+  // işlem bilgilerini tutan model sınıfı
+  final String id; //işlemin benzersiz kimliği
+  final String title; //başlık
+  final String category; //kategori
+  final String date; // işlem tarihi
+  final double amount; // işlem tutarı
+  final bool isExpanse; // gider mi değil mi
+  final IconData icon; // işlemin ikonu
 
   const TransactionItem({
+    //sabit constructor nesne oluşturmak için
+    //required: doldurulması zorunlu alanlar.
     required this.id,
     required this.title,
     required this.category,

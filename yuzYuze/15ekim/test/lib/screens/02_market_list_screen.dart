@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 
 import '../models/asset_model.dart';
-import '../models/transaction_model.dart';
+import '../models/transaction_model.dart'; // bu ekranda kullanıalcak modelleri importları
 
 class MarketGridListScreen extends StatelessWidget {
-  const MarketGridListScreen({super.key});
+  // Piyasa ve işlem listesini gösteren durumsuz ekran
+  const MarketGridListScreen({
+    super.key,
+  }); // Ekran widgetının oluşturulmasını ve takip edilmesini sağlar
 
-  // Kripto varlıkların örnek verileri
+  // Kripto varlıkların örnek verileri (değiştirilemeyen liste)
   static const List<Asset> assets = [
     Asset(
       symbol: 'BTC',
       name: 'Bitcoin',
       price: 67420.00,
-      change24h: 4.20,
+      change24h: 4.20, // Son 24 saatteki yüzdelik fiyat değişimi
       balance: 0.4,
     ),
     Asset(
@@ -31,7 +34,7 @@ class MarketGridListScreen extends StatelessWidget {
     ),
   ];
 
-  // İşlem geçmişi
+  // Örnek gelir ve gider işlemleri
   static const List<TransactionItem> transactions = [
     TransactionItem(
       id: 'tx_1',
@@ -40,7 +43,7 @@ class MarketGridListScreen extends StatelessWidget {
       date: 'Bugün 14:20',
       amount: 64500,
       icon: Icons.laptop_mac,
-      isExpanse: true,
+      isExpanse: true, // İşlemin gider olduğunu belirtir
     ),
     TransactionItem(
       id: 'tx_2',
@@ -49,7 +52,7 @@ class MarketGridListScreen extends StatelessWidget {
       date: 'Dün 09:00',
       amount: 125000.00,
       icon: Icons.account_balance,
-      isExpanse: false,
+      isExpanse: false, // İşlemin gelir olduğunu belirtir
     ),
     TransactionItem(
       id: 'tx_3',
@@ -71,22 +74,23 @@ class MarketGridListScreen extends StatelessWidget {
     ),
   ];
 
-  @override
+  @override // Üst sınıftaki build metodunu yeniden tanımlar
   Widget build(BuildContext context) {
-    // SingleChildScrollView:
-    // Sayfadaki tüm içeriği kaydırılabilir yapar.
+    // Ekranda gösterilecek widget ağacını oluşturur
+    // SingleChildScrollView: Sayfadaki tüm içeriği kaydırılabilir yapar
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(20),
+      physics: const BouncingScrollPhysics(), // Kaydırma sınırında esneme efekti uygular
+      padding: const EdgeInsets.all(
+        20,
+      ), // Ekran içeriğine her yönden boşluk ekler
 
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        // Bölümleri dikey olarak sıralar
+        crossAxisAlignment: CrossAxisAlignment.start, // İçerikleri sola hizalar
         children: [
-          // Ekran başlığı
-          _buildHeader(),
+          _buildHeader(), // Ekran başlığı
 
-          const SizedBox(height: 24),
-
+          const SizedBox(height: 24), // dikey boşlu
           // Kripto varlıklar bölümü
           _buildSectionTitle(
             title: "Piyasa Takibi",
@@ -95,8 +99,7 @@ class MarketGridListScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // GridView ile kart görünümü
-          _buildAssetGrid(),
+          _buildAssetGrid(), // GridView ile kart görünümü
 
           const SizedBox(height: 32),
 
@@ -108,13 +111,11 @@ class MarketGridListScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // ListView ile işlem listesi
-          _buildTransactionList(),
+          _buildTransactionList(), // ListView ile işlem listesi
 
           const SizedBox(height: 24),
 
-          // Gelir gider özeti
-          _buildSummaryCard(),
+          _buildSummaryCard(), // Gelir gider özeti
 
           const SizedBox(height: 32),
         ],
@@ -128,10 +129,13 @@ class MarketGridListScreen extends StatelessWidget {
   // Expanded: Kalan boşluğu doldurur.
   // =====================================================
   Widget _buildHeader() {
+    // Ekranın üst başlık alanını oluşturur
     return Row(
       children: [
         const Expanded(
+          // Başlık alanının kullanılabilir genişliği doldurmasını sağlar
           child: Column(
+            // Başlık ve açıklamayı alt alta yerleştirir
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -152,7 +156,8 @@ class MarketGridListScreen extends StatelessWidget {
         ),
 
         Container(
-          padding: const EdgeInsets.all(12),
+          // Başlığın sağındaki ikon kutusu
+          padding: const EdgeInsets.all(12), //iç boşluk
           decoration: BoxDecoration(
             color: const Color(0xFFEEF2FF),
             borderRadius: BorderRadius.circular(12),
@@ -163,18 +168,18 @@ class MarketGridListScreen extends StatelessWidget {
     );
   }
 
-  // Tekrar kullanılabilir bölüm başlığı
   Widget _buildSectionTitle({required String title, required String subtitle}) {
+    // Farklı başlık ve alt başlıklarla kullanılabilen bölüm
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          title, // Parametre olarak gelen başlık
           style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Text(
-          subtitle,
+          subtitle, // Parametre olarak gelen açıklama
           style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
         ),
       ],
@@ -194,24 +199,32 @@ class MarketGridListScreen extends StatelessWidget {
   // İç içe kaydırma sorununu engeller.
   // =====================================================
   Widget _buildAssetGrid() {
+    // Kripto varlıklarını ızgara düzeninde oluşturur
     return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      // Listedeki her varlık için ayrı kart üretir
+      shrinkWrap:
+          true, // Izgaranın içerik yüksekliği kadar alan kaplamasını sağlar
+      physics: const NeverScrollableScrollPhysics(), // İç içe kaydırmayı önleyerek ana sayfanın kaydırılmasını kullanır
 
-      itemCount: assets.length,
+      itemCount: assets
+          .length, // Oluşturulacak kart sayısını varlık listesine göre belirler
 
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        mainAxisExtent: 190,
+        // Izgaranın sütun ve boşluk düzenini belirler
+        crossAxisCount: 2, // Her satırda iki kart
+        crossAxisSpacing: 12, // Kartlar arasında yatay boşluk
+        mainAxisSpacing: 12, // Kartlar arasında dikey boşluk
+        mainAxisExtent: 190, // Kart yüksekliğini sabitler
       ),
 
       itemBuilder: (context, index) {
+        // Her kartın hangi veriden oluşturulacağını belirler
         // Listedeki sıradaki varlığı alır.
         final asset = assets[index];
 
-        return _buildAssetCard(asset);
+        return _buildAssetCard(
+          asset,
+        ); // Seçilen varlık için kart widgetı oluşturur
       },
     );
   }
@@ -220,13 +233,19 @@ class MarketGridListScreen extends StatelessWidget {
   // 3. KRİPTO VARLIK KARTI
   // =====================================================
   Widget _buildAssetCard(Asset asset) {
-    // Pozitif veya negatif fiyat değişimini kontrol eder.
-    final bool isPositive = asset.change24h >= 0;
+    // Verilen kripto varlığının bilgi kartı
+    // Pozitif veya negatif fiyat değişimini kontrol eder
+    final bool isPositive =
+        asset.change24h >=
+        0; // Fiyat değişiminin sıfır veya pozitif olup olmadığını kontrol eder
 
-    final Color changeColor = isPositive ? Colors.green : Colors.red;
+    final Color changeColor = isPositive
+        ? Colors.green
+        : Colors.red; // Değişim yönüne göre yeşil veya kırmızı renk
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      // Kartın dış kutusu
+      padding: const EdgeInsets.all(14), // Kartın iç boşluğu
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
@@ -241,16 +260,19 @@ class MarketGridListScreen extends StatelessWidget {
       ),
 
       child: Column(
+        // Kart içeriğini dikey sıralar
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Kripto simgesi ve sembolü
           Row(
             children: [
               CircleAvatar(
                 radius: 19,
                 backgroundColor: const Color(0xFFEEF2FF),
                 child: Text(
-                  asset.symbol.substring(0, 1),
+                  asset.symbol.substring(
+                    0,
+                    1,
+                  ), // Varlık kodunun ilk harfini gösterir
                   style: const TextStyle(
                     color: Color(0xFF6366F1),
                     fontWeight: FontWeight.bold,
@@ -261,6 +283,7 @@ class MarketGridListScreen extends StatelessWidget {
               const SizedBox(width: 8),
 
               Expanded(
+                // Kod metninin satırdaki kalan alana yayılmasını sağlar
                 child: Text(
                   asset.symbol,
                   style: const TextStyle(
@@ -276,30 +299,28 @@ class MarketGridListScreen extends StatelessWidget {
 
           Text(
             asset.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            maxLines: 1, // Varlık adını tek satırla sınırlar
+            overflow:
+                TextOverflow.ellipsis, // Uzun isimleri üç noktayla kısaltır
             style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
           ),
 
           const SizedBox(height: 6),
-
-          // Fiyat bilgisi
           FittedBox(
-            fit: BoxFit.scaleDown,
+            // Fiyat metninin kartın genişliğine sığmasını sağlar
+            fit: BoxFit.scaleDown, // Metin sığmadığında boyutunu küçültür
             alignment: Alignment.centerLeft,
             child: Text(
-              "\$${asset.price.toStringAsFixed(2)}",
+              "\$${asset.price.toStringAsFixed(2)}", // Fiyatı virgülden sonra iki basamakla gösterir
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
           ),
 
           const SizedBox(height: 10),
-
-          // Günlük fiyat değişimi
           Row(
             children: [
               Icon(
-                isPositive ? Icons.trending_up : Icons.trending_down,
+                isPositive ? Icons.trending_up : Icons.trending_down, // Fiyat yönüne göre yükseliş veya düşüş ikonu gösterir
                 color: changeColor,
                 size: 18,
               ),
@@ -307,7 +328,7 @@ class MarketGridListScreen extends StatelessWidget {
               const SizedBox(width: 4),
 
               Text(
-                "${isPositive ? '+' : ''}${asset.change24h.toStringAsFixed(2)}%",
+                "${isPositive ? '+' : ''}${asset.change24h.toStringAsFixed(2)}%", // Fiyat değişimini yüzde biçiminde gösterir
                 style: TextStyle(
                   color: changeColor,
                   fontSize: 12,
@@ -317,10 +338,10 @@ class MarketGridListScreen extends StatelessWidget {
             ],
           ),
 
-          const Spacer(),
+          const Spacer(), // Kalan dikey boşluğu kullanarak bakiyeyi alta iter
 
           Text(
-            "Bakiye: ${asset.balance}",
+            "Bakiye: ${asset.balance}", // Kullanıcının varlık miktarını gösterir
             style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
           ),
         ],
@@ -338,20 +359,27 @@ class MarketGridListScreen extends StatelessWidget {
   // Her işlem için ayrı bir kart oluşturur.
   // =====================================================
   Widget _buildTransactionList() {
+    // İşlem geçmişini ayrı satırlar halinde oluşturur
     return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      // İşlemleri aralarında boşluk bırakarak listeler
+      shrinkWrap: true, // Listeyi içerik yüksekliğiyle sınırlar
+      physics: const NeverScrollableScrollPhysics(), // Ana sayfa dışında ayrı kaydırmayı engeller
 
-      itemCount: transactions.length,
+      itemCount: transactions.length, // Gösterilecek işlem sayısını belirler
 
       separatorBuilder: (context, index) {
+        // İşlemlerin arasına eklenecek alanı oluşturur
         return const SizedBox(height: 12);
       },
 
       itemBuilder: (context, index) {
-        final transaction = transactions[index];
+        // Her işlem satırını dinamik oluşturur
+        final transaction =
+            transactions[index]; // Listedeki sıradaki işlemi alır
 
-        return _buildTransactionItem(transaction);
+        return _buildTransactionItem(
+          transaction,
+        ); // İşlem verisini kart oluşturma metoduna gönderir
       },
     );
   }
@@ -360,10 +388,14 @@ class MarketGridListScreen extends StatelessWidget {
   // 5. İŞLEM LİSTESİ ELEMANI
   // =====================================================
   Widget _buildTransactionItem(TransactionItem transaction) {
-    // Gider ise kırmızı, gelir ise yeşil.
-    final bool isExpense = transaction.isExpanse;
+    // Tek bir işlem satırının görünümünü oluşturur
+    // Gider ise kırmızı gelir ise yeşil
+    final bool isExpense =
+        transaction.isExpanse; // İşlemin gider olup olmadığını belirler
 
-    final Color amountColor = isExpense ? Colors.red : Colors.green;
+    final Color amountColor = isExpense
+        ? Colors.red
+        : Colors.green; // İşlem türüne göre tutarın rengini seçer
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -375,30 +407,36 @@ class MarketGridListScreen extends StatelessWidget {
 
       child: Row(
         children: [
-          // İşlem kategorisi ikonu
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: isExpense
+              color:
+                  isExpense // Gider ve gelir için farklı arka plan rengi seçer
                   ? const Color(0xFFFEF2F2)
                   : const Color(0xFFF0FDF4),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(transaction.icon, color: amountColor),
+            child: Icon(
+              transaction.icon,
+              color: amountColor,
+            ), // İşleme ait ikonu uygun renkte gösterir
           ),
 
           const SizedBox(width: 12),
 
           // İşlem açıklamaları
           Expanded(
+            // Açıklama alanının kalan genişliği kullanmasını sağlar
             child: Column(
+              // İşlem bilgilerini alt alta sıralar
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   transaction.title,
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  overflow: TextOverflow
+                      .ellipsis, // Uzun işlem başlıklarını üç noktayla kısaltır
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -432,7 +470,7 @@ class MarketGridListScreen extends StatelessWidget {
 
           // İşlem tutarı
           Text(
-            "${isExpense ? '-' : '+'}₺${transaction.amount.toStringAsFixed(2)}",
+            "${isExpense ? '-' : '+'}₺${transaction.amount.toStringAsFixed(2)}", // Geliri artı gideri eksi işaretiyle gösterir
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -451,21 +489,34 @@ class MarketGridListScreen extends StatelessWidget {
   // Liste içindeki sayısal verileri toplayabilir.
   // =====================================================
   Widget _buildSummaryCard() {
-    // Toplam geliri hesapla.
-    final double totalIncome = transactions
-        .where((item) => !item.isExpanse)
-        .fold<double>(0.0, (sum, item) => sum + item.amount);
+    // Gelir gider ve net bakiyeyi hesaplayıp gösterir
+    final double totalIncome =
+        transactions // Yalnızca gelirleri toplayarak toplam geliri hesaplar
+            .where(
+              (item) => !item.isExpanse,
+            ) // Gider olmayan işlemleri filtreler
+            .fold<double>(
+              0.0,
+              (sum, item) => sum + item.amount,
+            ); // Filtrelenen işlemlerin tutarlarını toplar
 
     // Toplam gideri hesapla.
-    final double totalExpense = transactions
-        .where((item) => item.isExpanse)
-        .fold<double>(0.0, (sum, item) => sum + item.amount);
+    final double totalExpense =
+        transactions // Yalnızca giderleri toplayarak toplam gideri hesaplar
+            .where((item) => item.isExpanse) // Gider işlemlerini filtreler
+            .fold<double>(
+              0.0,
+              (sum, item) => sum + item.amount,
+            ); // Gider tutarlarını sıfırdan başlayarak toplar
 
     // Net bakiye
-    final double netBalance = totalIncome - totalExpense;
+    final double netBalance =
+        totalIncome -
+        totalExpense; // Toplam gelirden gideri çıkararak net bakiyeyi bulur
 
     return Container(
-      width: double.infinity,
+      width:
+          double.infinity, // Kartın kullanılabilir genişliği kaplamasını sağlar
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
@@ -473,6 +524,7 @@ class MarketGridListScreen extends StatelessWidget {
       ),
 
       child: Column(
+        // Özet içeriğini dikey sıralar
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
@@ -487,9 +539,12 @@ class MarketGridListScreen extends StatelessWidget {
           const SizedBox(height: 20),
 
           Row(
+            // Gelir ve gider alanlarını yatay yerleştirir
             children: [
               Expanded(
+                // Gelir alanına kullanılabilir genişlikten pay verir
                 child: _buildSummaryValue(
+                  // Gelir tutarını yeşil renkte gösteren alanı oluşturur
                   "Toplam Gelir",
                   totalIncome,
                   Colors.greenAccent,
@@ -499,7 +554,9 @@ class MarketGridListScreen extends StatelessWidget {
               const SizedBox(width: 12),
 
               Expanded(
+                // Gider alanına kullanılabilir genişlikten pay verir
                 child: _buildSummaryValue(
+                  // Gider tutarını kırmızı renkte gösteren alanı oluşturur
                   "Toplam Gider",
                   totalExpense,
                   Colors.redAccent,
@@ -508,7 +565,10 @@ class MarketGridListScreen extends StatelessWidget {
             ],
           ),
 
-          const Divider(color: Colors.white24, height: 32),
+          const Divider(
+            color: Colors.white24,
+            height: 32,
+          ), // Gelir gider toplamlarıyla net bakiye arasına çizgi koyar
 
           const Text(
             "Net İşlem Bakiyesi",
@@ -518,9 +578,9 @@ class MarketGridListScreen extends StatelessWidget {
           const SizedBox(height: 8),
 
           Text(
-            "₺${netBalance.toStringAsFixed(2)}",
+            "₺${netBalance.toStringAsFixed(2)}", // Net bakiyeyi iki ondalık basamakla gösterir
             style: TextStyle(
-              color: netBalance >= 0 ? Colors.greenAccent : Colors.redAccent,
+              color: netBalance >= 0 ? Colors.greenAccent : Colors.redAccent, // Net bakiye pozitifse yeşil negatifse kırmızı kullanır
               fontSize: 25,
               fontWeight: FontWeight.bold,
             ),
@@ -530,8 +590,8 @@ class MarketGridListScreen extends StatelessWidget {
     );
   }
 
-  // Tekrar kullanılabilir özet alanı
   Widget _buildSummaryValue(String title, double amount, Color color) {
+    // Başlık tutar ve renkle tekrar kullanılabilen özet alanını oluşturur
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -543,7 +603,8 @@ class MarketGridListScreen extends StatelessWidget {
         const SizedBox(height: 8),
 
         FittedBox(
-          fit: BoxFit.scaleDown,
+          // Tutarın alana sığmasını sağlar
+          fit: BoxFit.scaleDown, // Gerekli olduğunda tutar metnini küçültür
           alignment: Alignment.centerLeft,
           child: Text(
             "₺${amount.toStringAsFixed(2)}",

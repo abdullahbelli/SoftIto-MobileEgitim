@@ -1,52 +1,72 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const DtmMasterApp());
+  // Uygulamanın başlangıç noktası
+  runApp(
+      const DtmMasterApp()); // DtmMasterApp widgetını çalıştırarak uygulamayı başlatır
 }
 
 class DtmMasterApp extends StatelessWidget {
-  const DtmMasterApp({super.key});
+  // Durumu değişmeyen ana uygulama widgetı
 
-  @override
+  const DtmMasterApp(
+      {super.key}); // Widgetın oluşturulmasını ve flutter tarafından takip edilmesini sağlar
+
+  @override // Üst sınıftaki build metodunu yeniden tanımlar
   Widget build(BuildContext context) {
+    // Uygulamanın arayüz yapısını oluşturur
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: "DTM Flutter Sınıfı",
+      // Uygulamanın tema, başlık ve başlangıç ekranını yönetir
+      debugShowCheckedModeBanner: false, // Sağ üstteki debug yazısını gizler
+      title: "DTM Flutter Sınıfı", // Uygulamanın başlığını belirler
       theme: ThemeData(
-        useMaterial3: true,
+        // Uygulama genelinde kullanılacak tasarım ayarlarını belirler
+        useMaterial3: true, // Material 3 tasarım sistemini etkinleştirir
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366F1),
-          brightness: Brightness.light,
+          // Belirlenen ana renkten uyumlu bir renk paleti oluşturur
+          seedColor: const Color(0xFF6366F1), // Renk paletinin temel rengi
+          brightness: Brightness.light, // Açık renk temasını kullanır
         ),
       ),
-      home: const LiveCanvasScreen(),
+      home:
+          const LiveCanvasScreen(), // Uygulama açıldığında gösterilecek ilk ekran
     );
   }
 }
 
 class LiveCanvasScreen extends StatelessWidget {
-  const LiveCanvasScreen({super.key});
+  // Durumu değişmeyen arayüz ekranı
+  const LiveCanvasScreen(
+      {super.key}); // Ekran widgetının oluşturulmasını ve takip edilmesini sağlar
 
-  @override
+  @override // Üst sınıftaki build metodunu yeniden tanımlar
   Widget build(BuildContext context) {
+    // Ekranda gösterilecek arayüz bileşenlerini oluşturur
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FaFC),
+      // AppBar ve body gibi temel ekran alanlarını oluşturur
+      backgroundColor: const Color(0xFFF8FaFC), // Ekranın arka plan rengi
       appBar: AppBar(
+        // Ekranın üst kısmındaki uygulama çubuğu
         title: const Text(
+          // Üst çubukta gösterilecek başlık
           "DTM Canlı Arayüz",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        centerTitle: true,
+        centerTitle: true, // Başlığı üst çubuğun ortasına hizalar
         backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 0, // Üst çubuğun gölgesini kaldırır
         actions: [
+          // Üst çubuğun sağ tarafına eklenecek butonları tutar
           IconButton(
-            icon: const Icon(Icons.notifications_active_outlined),
-            onPressed: () {},
+            // Tıklanabilir bir ikon butonu oluşturur
+            icon: const Icon(Icons
+                .notifications_active_outlined), // Butonda bildirim ikonunu gösterir
+            onPressed: () {}, // Butona basıldığında çalışır şu an işlem yapmaz
           ),
         ],
       ),
       body: const Center(
+        // Ekranın ana içeriğini ortalar
         child: Text("Buraya Canlı Arayüz Gelecek"),
       ),
     );
