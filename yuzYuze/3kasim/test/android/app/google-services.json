@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "939129918873",
+    "project_id": "softitotest",
+    "storage_bucket": "softitotest.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:939129918873:android:fb5c12dc980c26889a2f08",
+        "android_client_info": {
+          "package_name": "com.example.test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVeRp7CDqoVDFeGcZz0aIwqmDIXz_6QbM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

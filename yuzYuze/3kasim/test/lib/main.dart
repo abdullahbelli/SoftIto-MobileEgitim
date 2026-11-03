@@ -1,30 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'firestore_yonetim_ekrani.dart';
 
+import 'screens/firestore_yonetim_ekrani.dart';
+import 'firebase_options.dart';
 
-//firebaseden önce motor kuurlması gerekli yoksa uygulama çöker
+//firebase başlatılmadan önce flutter altyapısının hazır olması gerekiyor
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // yerel kanallar ayağa kaldırılırı bu olmadan firebsae bağlanırsa uygulam çöker
-  await Firebase.initializeApp();//başlangıçta bir kez çalışır
-  runApp(const SoftitoFirestoreUygulamasi());
+  WidgetsFlutterBinding.ensureInitialized(); //flutter altyapısını hazırlar ve firebase başlatılmadan önce gerekli bağlantıları kurar
+  await Firebase.initializeApp(
+    //firebase başlatılana kadar bekler
+    options: DefaultFirebaseOptions
+        .currentPlatform, //çalışılan platforma göre firebase ayarlarını seçer
+  ); //firebase uygulama başlangıcında bir kez başlatılır
+  runApp(
+    const SoftitoFirestoreUygulamasi(),
+  ); //uygulamanın ana widgetını çalıştırır
 }
 
-class SoftitoFirestoreUygulamasi extends StatelessWidget{
-  const SoftitoFirestoreUygulamasi({super.key});
+class SoftitoFirestoreUygulamasi extends StatelessWidget {
+  //durumu kendi içinde değişmeyen ana uygulama widgetı
+  const SoftitoFirestoreUygulamasi({
+    super.key,
+  }); //widgetın constructor metodu super.key üst sınıfa key bilgisini gönderir
 
-  @override
+  @override //üst sınıftaki metodu yeniden yazdığımızı belirtir
   Widget build(BuildContext context) {
+    //uygulamanın arayüzünü oluşturur context widgetın bulunduğu konumun bilgisini taşır
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: "Cloud FireStore",
+      //uygulamanın genel tema ve başlangıç ekranı ayarlarını yapar
+      debugShowCheckedModeBanner: false, //debug yazısını gizler
+      title: "Cloud FireStore", //uygulamanın başlığı
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
-        useMaterial3: true,
-
+        //uygulamanın genel tasarım ayarları
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepOrange,
+        ), //turuncu renkten uyumlu bir renk paleti
+        useMaterial3: true, //material 3 tasarım sistemini kullanır
       ),
-      home : const FirestoreYonetimEkrani(),
+      home: const FirestoreYonetimEkrani(), //uygulama açıldığında gösterilecek ilk ekran
     );
   }
 }

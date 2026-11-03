@@ -157,7 +157,6 @@ class _FirestoreYonetimEkraniState extends State<FirestoreYonetimEkrani> {
                         ),
                       ),
                     );
-
                   },
                 );
               },
@@ -166,15 +165,16 @@ class _FirestoreYonetimEkraniState extends State<FirestoreYonetimEkrani> {
     );
   }
 
-  void _yeniOgrenciKaydet(){
+  void _yeniOgrenciKaydet() {
     final adSoyad = _adSoyadKontrolcusu.text.trim();
     final proje = _projeKontrolcusu.text.trim();
     final not = int.tryParse(_notKontrolcusu.text.trim()) ?? 0;
 
     if (adSoyad.isEmpty || proje.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen ad soyad ve proje adını giriniz.')),
-
+        const SnackBar(
+          content: Text('Lütfen ad soyad ve proje adını giriniz.'),
+        ),
       );
       return;
     }
@@ -182,9 +182,6 @@ class _FirestoreYonetimEkraniState extends State<FirestoreYonetimEkrani> {
     _adSoyadKontrolcusu.clear();
     _projeKontrolcusu.clear();
     _notKontrolcusu.clear();
-
-
-
   }
 }
 
@@ -194,5 +191,3 @@ class _FirestoreYonetimEkraniState extends State<FirestoreYonetimEkrani> {
 //NOT GÜNCELLE DİALOG FONKSİYONU YAZILACAK
 
 //SAYFALAR PARSE EDİLECEK VE SİSTEM ÇALIŞIR HALE GETİRİLECEK
-
-//YARIN RASTGELE BİRİ SEÇİLİP EKRANINDA SINIFA GÖSTEREK
