@@ -1,132 +1,203 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:kasim4_uygulama/models/bildirim_modeli.dart';
+import 'package:flutter/material.dart'; // material tasarım widgetlarını kullanmak için
+import 'package:flutter/widgets.dart'; // flutter temel widgetlarını kullanmak için
+import 'package:kasim4_uygulama/models/bildirim_modeli.dart'; // bildirim verilerini tutan modeli projeye dahil eder
 
 class BildirimListesiKarti extends StatelessWidget {
-  final List<BildirimModeli> bildirimler;
-  final String? token;
-  final bool konuyaAboneMi;
-  final ValueChanged<bool> onAboneDegisti;
+  // durumu kendi içinde değişmeyen bildirim kartı widgetı
+  final List<BildirimModeli>
+  bildirimler; // gelen bildirimleri liste olarak tutar
+  final String? token; // null olabilen fcm cihaz tokenını tutar
+  final bool konuyaAboneMi; // kullanıcının konuya abone olup olmadığını tutar
+  final ValueChanged<bool> onAboneDegisti; // abonelik durumu değişince bool değerini üst widgeta ileten callback
 
   const BildirimListesiKarti({
-    super.key,
-    required this.bildirimler,
-    required this.token,
-    required this.konuyaAboneMi,
-    required this.onAboneDegisti,
+    // widgetın kurucu metodu
+    super.key, // widgetın kimliğini üst sınıfa iletir
+    required this.bildirimler, // bildirim listesinin gönderilmesini zorunlu yapar
+    required this.token, // token parametresinin gönderilmesini zorunlu yapar ancak null olabilir
+    required this.konuyaAboneMi, // abonelik bilgisinin gönderilmesini zorunlu yapar
+    required this.onAboneDegisti, // abonelik değiştiğinde çalışacak fonksiyonu zorunlu yapar
   });
-  @override
+  @override // üst sınıftaki build metodunu ezerek yeniden tanımlar
   Widget build(BuildContext context) {
+    // widgetın arayüzünü oluşturan metot
     return Card(
-      elevation: 0,
+      // içeriği kart şeklinde gösterir
+      elevation: 0, // kartın gölge yüksekliğini sıfırlar
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade300),
+        // kartın kenarlık ve köşe şeklini belirler
+        borderRadius: BorderRadius.circular(
+          16,
+        ), // kartın köşelerini 16 piksel yuvarlar
+        side: BorderSide(
+          color: Colors.grey.shade300,
+        ), // kartın kenarlarına açık gri çizgi ekler
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        // kartın içeriğine boşluk ekler
+        padding: const EdgeInsets.all(
+          16,
+        ), // tüm kenarlardan 16 piksel iç boşluk bırakır
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          // widgetları dikey olarak sıralar
+          crossAxisAlignment: CrossAxisAlignment
+              .stretch, // çocukları yatay eksende mümkün olan genişliğe yayar
           children: [
             Row(
+              // widgetları yatay olarak sıralar
               children: [
                 const Icon(
-                  Icons.notifications_active_outlined,
-                  color: Color(0xFF006C4A),
+                  // bildirim simgesi oluşturur
+                  Icons.notifications_active_outlined, // aktif bildirim simgesini seçer
+                  color: Color(0xFF006C4A), // simgenin rengini belirler
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 8), // 8 piksel yatay boşluk bırakır
                 const Expanded(
+                  // kalan yatay alanı kaplamasını sağlar
                   child: Text(
-                    'fcm bildirim Merkezi',
+                    // başlık metnini gösterir
+                    'fcm bildirim Merkezi', // kartın başlığı
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFF172A),
+                      // metnin görünüm özelliklerini belirler
+                      fontSize: 16, // yazı boyutunu 16 yapar
+                      fontWeight: FontWeight.bold, // yazıyı kalın yapar
+                      color: Color(
+                        0xFFF172A,
+                      ), // metin rengini hex koduyla belirler
                     ),
                   ),
                 ),
                 Switch(
-                  value: konuyaAboneMi,
-                  onChanged: onAboneDegisti,
-                  activeColor: const Color.fromARGB(15, 160, 40, 50),
+                  // abonelik durumunu açıp kapatan anahtar
+                  value:
+                      konuyaAboneMi, // switch durumunu bool değişkeninden alır
+                  onChanged: onAboneDegisti, // switch değiştiğinde callback fonksiyonunu çalıştırır
+                  activeColor: const Color.fromARGB(
+                    15,
+                    160,
+                    40,
+                    50,
+                  ), // açık durumdaki switch rengini argb ile belirler
                 ),
               ],
             ),
             Text(
-              konuyaAboneMi ? 'tüm sınıf yayını aktif' : 'Yayın kapalı',
+              // abonelik durumuna göre bilgi metni gösterir
+              konuyaAboneMi ? 'tüm sınıf yayını aktif' : 'Yayın kapalı', // ternary operatörüyle koşula göre metin seçer
               style: TextStyle(
-                fontSize: 12,
-                color: konuyaAboneMi
-                    ? const Color.fromARGB(15, 24, 59, 17)
-                    : Colors.grey.shade600,
-                fontWeight: FontWeight.w600,
+                // metnin stil özelliklerini belirler
+                fontSize: 12, // yazı boyutunu 12 yapar
+                color:
+                    konuyaAboneMi // abonelik durumuna göre renk seçer
+                    ? const Color.fromARGB(
+                        15,
+                        24,
+                        59,
+                        17,
+                      ) // aboneyse bu rengi kullanır
+                    : Colors.grey.shade600, // abone değilse gri renk kullanır
+                fontWeight: FontWeight.w600, // yazıya yarı kalın görünüm verir
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 12), // 12 piksel dikey boşluk bırakır
             Container(
-              padding: const EdgeInsets.all(10),
+              // token bilgisini göstermek için kutu oluşturur
+              padding: const EdgeInsets.all(
+                10,
+              ), // tüm kenarlardan 10 piksel iç boşluk bırakır
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A),
-                borderRadius: BorderRadius.circular(8),
+                // kutunun arka plan ve köşe özelliklerini belirler
+                color: const Color(
+                  0xFF0F172A,
+                ), // kutunun arka plan rengini belirler
+                borderRadius: BorderRadius.circular(
+                  8,
+                ), // kutunun köşelerini 8 piksel yuvarlar
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                // içerikleri dikey sıralar
+                crossAxisAlignment:
+                    CrossAxisAlignment.start, // içerikleri sola hizalar
                 children: [
                   const Text(
-                    "Cihazın FCM TOKENİ",
+                    // token başlığını gösterir
+                    "Cihazın FCM TOKENİ", // başlık metni
                     style: TextStyle(
+                      // başlığın görünümünü belirler
                       color: Colors.blue, //burdaa neden shade kabul etmedi ???  const verdiğimiz için
-                      fontSize: 11,
+                      fontSize: 11, // yazı boyutunu 11 yapar
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 2), // 2 piksel dikey boşluk bırakır
                   SelectableText(
-                    token ?? 'token alınıyor',
+                    // kullanıcının seçip kopyalayabileceği metin oluşturur
+                    token ?? 'token alınıyor', // token null ise varsayılan metni gösterir
                     style: const TextStyle(
-                      color: Color(0xFF388888),
-                      fontSize: 11,
-                      fontFamily: 'monospace',
+                      // token metninin görünümünü belirler
+                      color: Color(
+                        0xFF388888,
+                      ), // token metninin rengini belirler
+                      fontSize: 11, // yazı boyutunu 11 yapar
+                      fontFamily: 'monospace', // tüm karakterleri eşit genişlikte gösteren yazı tipini kullanır
                     ),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 14),
+            const SizedBox(height: 14), // 14 piksel dikey boşluk bırakır
             Text(
-              'Gelen Bildirimler (${bildirimler.length})',
+              // gelen bildirim sayısını gösteren başlık
+              'Gelen Bildirimler (${bildirimler.length})', // string interpolation ile bildirim sayısını metne ekler
               style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: Color.fromARGB(15, 28, 167, 247),
+                // başlığın stilini belirler
+                fontWeight: FontWeight.bold, // yazıyı kalın yapar
+                fontSize: 14, // yazı boyutunu 14 yapar
+                color: Color.fromARGB(
+                  15,
+                  28,
+                  167,
+                  247,
+                ), // metnin rengini ve saydamlığını argb ile belirler
               ),
             ),
-            const SizedBox(height: 8),
-            bildirimler.isEmpty
+            const SizedBox(height: 8), // 8 piksel dikey boşluk bırakır
+            bildirimler
+                    .isEmpty // bildirim listesinin boş olup olmadığını kontrol eder
                 ? Container(
-                    padding: const EdgeInsets.all(24),
-                    alignment: Alignment.center,
+                    // liste boşsa bilgilendirme kutusu oluşturur
+                    padding: const EdgeInsets.all(
+                      24,
+                    ), // tüm kenarlardan 24 piksel iç boşluk bırakır
+                    alignment:
+                        Alignment.center, // içeriği kutunun ortasına hizalar
                     child: Text(
-                      'Henüz gelen bildirim yok',
-                      textAlign: TextAlign.center,
+                      // boş liste mesajını gösterir
+                      'Henüz gelen bildirim yok', // kullanıcıya gösterilecek bilgilendirme metni
+                      textAlign: TextAlign.center, // metni ortalar
                       style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
+                        // metnin görünümünü belirler
+                        fontSize: 12, // yazı boyutunu 12 yapar
+                        color:
+                            Colors.grey.shade500, // metne açık gri renk verir
                       ),
                     ),
                   )
                 : ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: bildirimler.length,
-                  separatorBuilder: (_, _ )=> const Divider(height: 1),
-                  itemBuilder: (context, index) {
-
-                  },
-                ),
+                    // liste doluysa aralarına ayırıcı koyarak elemanları listeler
+                    shrinkWrap:
+                        true, // listenin yüksekliğini içeriğine göre ayarlar
+                    physics: const NeverScrollableScrollPhysics(), // listenin kendi içinde kaydırılmasını engeller
+                    itemCount: bildirimler.length, // oluşturulacak liste elemanı sayısını belirler
+                    separatorBuilder: (_, _) => const Divider(height: 1), // elemanların arasına 1 piksel yüksekliğinde ayırıcı ekler
+                    itemBuilder: (context, index) {
+                      // her bildirim için liste elemanı oluşturan fonksiyon
+                    },
+                  ),
           ],
         ),
       ),
     );
   }
 }
+//Colors. hazır renk paletini kullanır, Color() ise renk değerini kendimiz belirlememizi sağlar.
