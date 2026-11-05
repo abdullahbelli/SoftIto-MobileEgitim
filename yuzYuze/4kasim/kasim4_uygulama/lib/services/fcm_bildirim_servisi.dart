@@ -1,3 +1,6 @@
+
+import 'dart:io'; // macOS ve iOS platformlarını kontrol etmek için kullanılır
+import 'package:flutter/foundation.dart'; // debugPrint ile konsola bilgi yazdırmak için kullanılır
 import 'package:firebase_messaging/firebase_messaging.dart'; // firebase üzerinden push bildirim almak için kullanılan paket
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'; // cihaz üzerinde yerel bildirim göstermek için kullanılan paket
 
@@ -14,16 +17,43 @@ class FcmBildirimServisi {
   _localPlugin = // yerel bildirim eklentisini tutan değişken
       FlutterLocalNotificationsPlugin(); // yerel bildirim işlemleri için nesne oluşturur
 
+  // macOS ve iOS için APNs token hazır olana kadar bekler.
+  Future<void> _apnsTokenBekle() async {
+    if (!Platform.isMacOS && !Platform.isIOS) return;
+
+    for (int i = 0; i < 10; i++) {
+      final token = await _fcm.getAPNSToken();
+
+      if (token != null) {
+        debugPrint('FCM: APNs token başarıyla alındı.');
+        return;
+      }
+
+      debugPrint('FCM: APNs token bekleniyor... ${i + 1}/10');
+
+      await Future.delayed(const Duration(seconds: 1));
+    }
+
+    throw StateError(
+      'APNs token alınamadı. Apple Push Notifications '
+      've Firebase yapılandırmasını kontrol edin.',
+    );
+  }
+
   Future<void> baslat({
     // bildirim sistemini başlatan asenkron metot
     required Function(RemoteMessage message)
     onMesajGeldi, // mesaj geldiğinde çalıştırılacak zorunlu callback fonksiyonu
   }) async {
-    await _fcm.requestPermission(
+    debugPrint('FCM: Bildirim sistemi başlatılıyor...');
+
+    final izin = await _fcm.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     ); // kullanıcıdan bildirim gösterme, rozet ve ses izinlerini ister
+
+    debugPrint('FCM: Bildirim izin durumu: ${izin.authorizationStatus}');
 
     const androidSettings = AndroidInitializationSettings(
       // android başlangıç bildirim ayarlarını oluşturur
@@ -34,14 +64,19 @@ class FcmBildirimServisi {
       // platform ayarlarını tek nesnede toplar
       android: androidSettings, // android bildirim ayarlarını tanımlar
       iOS: iosSettings, // ios bildirim ayarlarını tanımlar
+      macOS: iosSettings, // macOS için yerel bildirim ayarlarını tanımlar
     );
 
     await _localPlugin.initialize(
       initSettings,
     ); // yerel bildirim sistemini verilen ayarlarla başlatır
 
+    debugPrint('FCM: Yerel bildirim sistemi hazır.');
+
     FirebaseMessaging.onMessage.listen((message) {
       // uygulama ön plandayken gelen firebase mesajlarını dinler
+      debugPrint('FCM: Yeni mesaj geldi: ${message.messageId}');
+
       _yerelBildirimGoster(
         message,
       ); // gelen mesajı cihazda yerel bildirim olarak gösterir
@@ -53,20 +88,63 @@ class FcmBildirimServisi {
     FirebaseMessaging.onBackgroundMessage(
       fcmBackgroundHandler,
     ); // arka plan mesajlarını işleyecek fonksiyonu kaydeder
+
+    debugPrint('FCM: Mesaj dinleyicileri hazır.');
+  }
+
+  Future<String?> tokenAl() async {
+    try {
+      await _apnsTokenBekle();
+
+      final token = await _fcm.getToken();
+
+      debugPrint(
+        token == null
+            ? 'FCM: Firebase token alınamadı.'
+            : 'FCM: Firebase token başarıyla alındı.',
+      );
+
+      return token;
+    } catch (e) {
+      debugPrint('FCM TOKEN HATASI: $e');
+      return null;
+    }
   }
 
   Future<void> konuyaAboneOl(String konu) async {
     // belirtilen bildirim konusuna abone olan metot
-    await _fcm.subscribeToTopic(
-      konu,
-    ); // cihazı firebase üzerindeki ilgili konuya abone eder
+    debugPrint('FCM: $konu konusuna abone olunuyor...');
+
+    try {
+      await _apnsTokenBekle();
+
+      await _fcm.subscribeToTopic(
+        konu,
+      ); // cihazı firebase üzerindeki ilgili konuya abone eder
+
+      debugPrint('FCM: $konu aboneliği başarılı.');
+    } catch (e) {
+      debugPrint('FCM ABONELİK HATASI: $e');
+      rethrow;
+    }
   }
 
   Future<void> konudanAyril(String konu) async {
     // belirtilen bildirim konusundan ayrılan metot
-    await _fcm.unsubscribeFromTopic(
-      konu,
-    ); // cihazın ilgili konu aboneliğini kaldırır
+    debugPrint('FCM: $konu aboneliğinden ayrılıyor...');
+
+    try {
+      await _apnsTokenBekle();
+
+      await _fcm.unsubscribeFromTopic(
+        konu,
+      ); // cihazın ilgili konu aboneliğini kaldırır
+
+      debugPrint('FCM: $konu aboneliği iptal edildi.');
+    } catch (e) {
+      debugPrint('FCM ABONELİKTEN AYRILMA HATASI: $e');
+      rethrow;
+    }
   }
 
   Future<void> _yerelBildirimGoster(RemoteMessage message) async {
@@ -85,6 +163,7 @@ class FcmBildirimServisi {
       // platformlara ait bildirim detaylarını birleştirir
       android: androidDetails, // android bildirim özelliklerini kullanır
       iOS: DarwinNotificationDetails(), // ios için bildirim detaylarını oluşturur
+      macOS: DarwinNotificationDetails(), // macOS için bildirim detaylarını oluşturur
     );
 
     await _localPlugin.show(

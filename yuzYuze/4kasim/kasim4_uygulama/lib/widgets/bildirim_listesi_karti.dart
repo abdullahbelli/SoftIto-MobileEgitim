@@ -192,6 +192,33 @@ class BildirimListesiKarti extends StatelessWidget {
                     separatorBuilder: (_, _) => const Divider(height: 1), // elemanların arasına 1 piksel yüksekliğinde ayırıcı ekler
                     itemBuilder: (context, index) {
                       // her bildirim için liste elemanı oluşturan fonksiyon
+                      final b = bildirimler[index];
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const CircleAvatar(
+                          backgroundColor: Color.fromARGB(0, 123, 238, 230),
+                          child: Icon(
+                            Icons.mark_email_unread_outlined,
+                            color: Color.fromARGB(0, 113, 25, 25),
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(
+                          b.baslik,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        subtitle: Text(b.icerik),
+                        trailing: Text(
+                          '${b.tarih.hour.toString().padLeft(2,'0')} : ${b.tarih.minute.toString().padLeft(2,'0')}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade500, //uygulama çalışırken güncelleme yapılacağı için const kullanmıyorum aterial kütüphanesinin sözleşmelernde uyma konusu da var ??
+                          ),
+                        ),
+                      );
                     },
                   ),
           ],

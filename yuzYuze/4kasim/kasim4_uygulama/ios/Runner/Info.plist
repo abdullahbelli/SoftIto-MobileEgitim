@@ -27,6 +27,10 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
+	<key>NSPhotoLibraryUsageDescription</key>
+<string>Uygulamaya resim yükleyebilmek için fotoğraf erişimi gereklidir.</string>
+<key>NSCameraUsageDescription</key>
+<string>Fotoğraf çekebilmek için kamera erişimi gereklidir.</string>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
