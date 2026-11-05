@@ -30,6 +30,7 @@ class BildirimListesiKarti extends StatelessWidget {
           16,
         ), // kartın köşelerini 16 piksel yuvarlar
         side: BorderSide(
+          // kenarlık için gri rengin 300 tonunu kullanır
           color: Colors.grey.shade300,
         ), // kartın kenarlarına açık gri çizgi ekler
       ),
@@ -42,7 +43,9 @@ class BildirimListesiKarti extends StatelessWidget {
           // widgetları dikey olarak sıralar
           crossAxisAlignment: CrossAxisAlignment
               .stretch, // çocukları yatay eksende mümkün olan genişliğe yayar
+          // sütun içerisinde gösterilecek widgetları tanımlar
           children: [
+            // bildirim başlığı ve abonelik anahtarını yatay olarak sıralar
             Row(
               // widgetları yatay olarak sıralar
               children: [
@@ -62,6 +65,7 @@ class BildirimListesiKarti extends StatelessWidget {
                       fontSize: 16, // yazı boyutunu 16 yapar
                       fontWeight: FontWeight.bold, // yazıyı kalın yapar
                       color: Color(
+                        // metnin rengini hexadecimal değerle belirler
                         0xFFF172A,
                       ), // metin rengini hex koduyla belirler
                     ),
@@ -73,9 +77,13 @@ class BildirimListesiKarti extends StatelessWidget {
                       konuyaAboneMi, // switch durumunu bool değişkeninden alır
                   onChanged: onAboneDegisti, // switch değiştiğinde callback fonksiyonunu çalıştırır
                   activeColor: const Color.fromARGB(
+                    // rengin alfa değerini belirler
                     15,
+                    // kırmızı renk bileşenini belirler
                     160,
+                    // yeşil renk bileşenini belirler
                     40,
+                    // mavi renk bileşenini belirler
                     50,
                   ), // açık durumdaki switch rengini argb ile belirler
                 ),
@@ -90,9 +98,13 @@ class BildirimListesiKarti extends StatelessWidget {
                 color:
                     konuyaAboneMi // abonelik durumuna göre renk seçer
                     ? const Color.fromARGB(
+                        // rengin alfa değerini belirler
                         15,
+                        // kırmızı renk bileşenini belirler
                         24,
+                        // yeşil renk bileşenini belirler
                         59,
+                        // mavi renk bileşenini belirler
                         17,
                       ) // aboneyse bu rengi kullanır
                     : Colors.grey.shade600, // abone değilse gri renk kullanır
@@ -154,9 +166,13 @@ class BildirimListesiKarti extends StatelessWidget {
                 fontWeight: FontWeight.bold, // yazıyı kalın yapar
                 fontSize: 14, // yazı boyutunu 14 yapar
                 color: Color.fromARGB(
+                  // rengin saydamlık değerini belirler
                   15,
+                  // kırmızı renk bileşenini belirler
                   28,
+                  // yeşil renk bileşenini belirler
                   167,
+                  // mavi renk bileşenini belirler
                   247,
                 ), // metnin rengini ve saydamlığını argb ile belirler
               ),
@@ -192,29 +208,62 @@ class BildirimListesiKarti extends StatelessWidget {
                     separatorBuilder: (_, _) => const Divider(height: 1), // elemanların arasına 1 piksel yüksekliğinde ayırıcı ekler
                     itemBuilder: (context, index) {
                       // her bildirim için liste elemanı oluşturan fonksiyon
+
+                      // index değerine karşılık gelen bildirimi listeden alır
                       final b = bildirimler[index];
+
+                      // her bildirimi liste satırı olarak gösterir
                       return ListTile(
+                        // liste elemanının varsayılan iç boşluklarını kaldırır
                         contentPadding: EdgeInsets.zero,
+
+                        // liste elemanının sol tarafında dairesel simge gösterir
                         leading: const CircleAvatar(
+                          // dairesel alanın arka plan rengini belirler
                           backgroundColor: Color.fromARGB(0, 123, 238, 230),
+
+                          // dairesel alanın içerisinde bildirim simgesi oluşturur
                           child: Icon(
+                            // okunmamış e-posta simgesini kullanır
                             Icons.mark_email_unread_outlined,
+
+                            // simgenin rengini argb değeriyle belirler
                             color: Color.fromARGB(0, 113, 25, 25),
+
+                            // simgenin boyutunu 20 piksel yapar
                             size: 20,
                           ),
                         ),
+
+                        // bildirim başlığını gösterir
                         title: Text(
+                          // bildirim modelindeki başlık bilgisini kullanır
                           b.baslik,
+
+                          // başlık metninin görünüm özelliklerini belirler
                           style: const TextStyle(
+                            // başlık yazısını kalın yapar
                             fontWeight: FontWeight.bold,
+
+                            // başlık yazısının boyutunu 14 yapar
                             fontSize: 14,
                           ),
                         ),
+
+                        // bildirim modelindeki içerik bilgisini alt başlık olarak gösterir
                         subtitle: Text(b.icerik),
+
+                        // liste elemanının sağ tarafında bildirim saatini gösterir
                         trailing: Text(
-                          '${b.tarih.hour.toString().padLeft(2,'0')} : ${b.tarih.minute.toString().padLeft(2,'0')}',
+                          // bildirim tarihinden saat ve dakika bilgilerini alarak iki haneli biçimde gösterir
+                          '${b.tarih.hour.toString().padLeft(2, '0')} : ${b.tarih.minute.toString().padLeft(2, '0')}',
+
+                          // saat metninin görünüm özelliklerini belirler
                           style: TextStyle(
+                            // saat metninin boyutunu 11 yapar
                             fontSize: 11,
+
+                            // saat metninin rengini gri rengin 500 tonuyla belirler
                             color: Colors.grey.shade500, //uygulama çalışırken güncelleme yapılacağı için const kullanmıyorum aterial kütüphanesinin sözleşmelernde uyma konusu da var ??
                           ),
                         ),
@@ -228,3 +277,15 @@ class BildirimListesiKarti extends StatelessWidget {
   }
 }
 //Colors. hazır renk paletini kullanır, Color() ise renk değerini kendimiz belirlememizi sağlar.
+
+// soru 1: colors.blue.shade500 neden const Text içerisinde kullanılamıyor
+// const ile oluşturulan widgetların değerleri derleme zamanında sabit olmalıdır
+// shade500 çalışma zamanında değerlendirildiği için const içerisinde kullanılamaz
+// çözüm olarak Text ve TextStyle üzerindeki const kaldırılabilir
+// Colors.blue gibi sabit renkler ise const içerisinde kullanılabilir
+
+// soru 2: colors.grey.shade500 kullanırken neden const TextStyle yazamıyoruz
+// shade500 derleme zamanı sabiti olmadığı için const TextStyle ile kullanılamaz
+// bunun sebebi uygulamanın çalışırken güncellenmesi veya setState kullanılması değildir
+// const yalnızca derleme zamanında belirlenebilen değerleri kabul eder
+// Colors.grey doğrudan kullanılabilir ancak Colors.grey.shade500 için const kaldırılmalıdır

@@ -32,9 +32,13 @@ class StorageServisi {
     required String dosyaAdi, // dosyanın kaydedileceği adı zorunlu olarak alır
     String klasor = 'yuklemeler', // klasör belirtilmezse varsayılan olarak yuklemeler klasörünü kullanır
   }) {
+    // firebase storage üzerinde dosyanın kaydedileceği konumu belirler
     final Reference ref = _storage.ref().child(
+      // klasör ve dosya adını birleştirerek dosyanın yolunu oluşturur
       '$klasor/$dosyaAdi',
     ); // firebase storage üzerinde dosyanın hedef yolunu oluşturur
+
+    // dosyanın içerik türünü ve özel bilgilerini tutan metadata nesnesini oluşturur
     final metadata = SettableMetadata(
       // dosyaya ait ek bilgileri tanımlar
       contentType: 'image/png', // dosyanın içerik türünü png olarak belirtir
@@ -42,8 +46,13 @@ class StorageServisi {
         'ekleyen': 'Berat Atmaca',
       }, // dosyaya özel ekleyen bilgisini kaydeder
     );
+
+    // belirtilen dosyayı firebase storage üzerine yüklemeye başlar
     return ref.putFile(
+      // yükleme işlemi için dosya nesnesini gönderir
       dosya,
+
+      // dosyanın içerik türünü ve özel bilgilerini yükleme işlemine ekler
       metadata,
     ); // dosyayı metadata ile yüklemeye başlar ve yükleme görevini döndürür
   }
@@ -55,9 +64,14 @@ class StorageServisi {
 
   Future<void> dosyaSil(String dosyaYolu) async {
     // belirtilen dosyayı silen asenkron metot
+
+    // silinecek dosyanın firebase storage üzerindeki referansını oluşturur
     final Reference ref = _storage.ref().child(
+      // silinecek dosyanın klasör ve dosya adını içeren yolunu kullanır
       dosyaYolu,
     ); // silinecek dosyanın storage referansını oluşturur
+
+    // belirtilen dosyayı firebase storage üzerinden siler
     await ref
         .delete(); // dosyayı firebase storage üzerinden siler ve işlemi bekler
   }
